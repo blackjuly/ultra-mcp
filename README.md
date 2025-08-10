@@ -457,10 +457,30 @@ _"The future belongs to those who can seamlessly orchestrate human creativity wi
 
 While both projects aim to enhance AI development workflows, Ultra MCP brings unique advantages:
 
-1. **Written in TypeScript** - Full type safety, better IDE support, and more maintainable codebase compared to Python-based alternatives
-2. **Built-in Usage Analytics** - Lightweight SQLite database powered by libsql for automatic LLM usage tracking and cost monitoring. Without knowing your bill, it's not great to use AI by AI IMHO.
+1. **Written in TypeScript** - Full type safety, excellent IDE support, and a more maintainable codebase
 
-These features make Ultra MCP particularly suited for developers who want robust tooling with built-in cost visibility for responsible AI usage.
+2. **Vector Search Support** - Built-in semantic code search using vector embeddings
+   - Index your entire codebase with `npx ultra-mcp index`
+   - Search with natural language queries: `npx ultra-mcp search "authentication logic"`
+   - Powered by OpenAI, Azure OpenAI, and Google Gemini embeddings
+   - Local SQLite storage with libSQL vector extension for efficient similarity search
+   - Smart chunking and overlap for optimal search results
+
+3. **Built-in Dashboard & Usage Tracking** - Comprehensive analytics and cost monitoring
+   - Web dashboard with live metrics and real-time statistics
+   - Automatic tracking of all LLM requests with token counts
+   - **Continuously updated pricing via LiteLLM** - Accurate cost calculations
+   - Tiered pricing support (e.g., Gemini's long-context pricing tiers)
+   - SQLite database powered by libSQL for local-first privacy
+
+4. **Advanced Pricing System** - Real-time cost management
+   - Fetches latest pricing from LiteLLM's GitHub repository
+   - File-based caching with 1-hour TTL to minimize network calls
+   - CLI commands: `npx ultra-mcp pricing show gpt-4o`
+   - Accurate cost tracking for hundreds of models across all providers
+   - Automatic fallback to cached data when offline
+
+Unlike many MCP implementations, Ultra MCP includes built-in vector search and a pricing-aware dashboard out of the box. These features make Ultra MCP particularly suited for developers who want robust tooling with built-in cost visibility and intelligent code search capabilities for responsible AI usage.
 
 ## Links
 

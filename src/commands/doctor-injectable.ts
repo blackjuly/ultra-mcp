@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import { ConfigManager } from '../config/manager';
 import { ProviderManager } from '../providers/manager';
+import { pricingService } from '../pricing';
 
 interface DoctorOptions {
   test?: boolean;
@@ -129,6 +130,31 @@ export async function runDoctorWithDeps(
       status: hasAnyProvider,
       message: hasAnyProvider ? 'At least one provider configured' : 'No providers configured',
     });
+
+    // Check 7: Pricing cache
+    try {
+      const pricingCacheInfo = await pricingService.getCacheInfo();
+      if (pricingCacheInfo.exists) {
+        const ageMinutes = Math.floor((pricingCacheInfo.age || 0) / 60);
+        results.push({
+          name: 'Pricing cache',
+          status: true,
+          message: `Active (${ageMinutes} minutes old${pricingCacheInfo.expired ? ', expired' : ''})`,
+        });
+      } else {
+        results.push({
+          name: 'Pricing cache',
+          status: false,
+          message: 'Not initialized (will fetch on first use)',
+        });
+      }
+    } catch (error) {
+      results.push({
+        name: 'Pricing cache',
+        status: false,
+        message: 'Error checking cache',
+      });
+    }
 
     // Optional: Test connections
     if (options.test && hasAnyProvider) {

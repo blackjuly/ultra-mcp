@@ -79,6 +79,7 @@
     "@types/morgan": "^1.9.10",
     "ai": "^5.0.5",
     "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
     "colorette": "^2.0.20",
     "commander": "^14.0.0",
     "conf": "^14.0.0",

@@ -10,6 +10,7 @@ import { runDbShow, runDbView, runDbStats } from './commands/db';
 import { runDashboard } from './commands/dashboard';
 import { createVectorIndexCommand } from './commands/vector-index';
 import { createVectorSearchCommand } from './commands/vector-search';
+import { createPricingCommands } from './commands/pricing';
 import { 
   createReviewCommand, 
   createAnalyzeCommand, 
@@ -147,6 +148,9 @@ program
 // Add vector commands
 program.addCommand(createVectorIndexCommand());
 program.addCommand(createVectorSearchCommand());
+
+// Add pricing commands
+createPricingCommands(program);
 
 // Add advanced workflow commands
 program.addCommand(createReviewCommand());

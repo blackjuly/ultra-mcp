@@ -4,19 +4,23 @@ import { ensureDatabaseReady } from './migrate';
 import { eq } from 'drizzle-orm';
 import * as crypto from 'crypto';
 import { logger } from '../utils/logger';
+import { pricingService } from '../pricing';
 
-// Pricing data for cost estimation (per 1K tokens)
-const PRICING = {
+// Legacy pricing data for fallback (per 1K tokens)
+// This is used only if the pricing service fails
+const FALLBACK_PRICING = {
   // OpenAI Models
-  'o3': { input: 0.03, output: 0.06 },
+  'gpt-5': { input: 0.00125, output: 0.01 },
+  'o3': { input: 0.015, output: 0.06 },
   'o3-mini': { input: 0.0015, output: 0.002 },
   'gpt-4': { input: 0.03, output: 0.06 },
   'gpt-4-turbo': { input: 0.01, output: 0.03 },
   'gpt-3.5-turbo': { input: 0.0015, output: 0.002 },
   
   // Gemini Models  
-  'gemini-2.5-pro': { input: 0.00025, output: 0.0005 },
+  'gemini-2.5-pro': { input: 0.00125, output: 0.01 },
   'gemini-2.5-flash': { input: 0.000075, output: 0.0003 },
+  'gemini-2.0-flash': { input: 0.000075, output: 0.0003 },
   'gemini-pro': { input: 0.00025, output: 0.0005 },
   
   // Azure OpenAI (same as OpenAI but may have different pricing)
@@ -31,8 +35,20 @@ const PRICING = {
   'grok-beta': { input: 0.005, output: 0.005 },
 } as const;
 
-function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = PRICING[model as keyof typeof PRICING];
+async function estimateCost(model: string, inputTokens: number, outputTokens: number): Promise<number> {
+  try {
+    // Try to get cost from pricing service first
+    const calculation = await pricingService.calculateCost(model, inputTokens, outputTokens);
+    
+    if (calculation && calculation.totalCost > 0) {
+      return calculation.totalCost;
+    }
+  } catch (error) {
+    logger.warn(`Failed to get pricing from service for model ${model}:`, error);
+  }
+  
+  // Fallback to hardcoded pricing
+  const pricing = FALLBACK_PRICING[model as keyof typeof FALLBACK_PRICING];
   if (!pricing) {
     // Default fallback pricing if model not found
     return (inputTokens * 0.001 + outputTokens * 0.002) / 1000;
@@ -133,7 +149,7 @@ export async function updateLLMCompletion(data: CompletionData): Promise<void> {
           .execute();
           
         if (request.length > 0 && request[0].model) {
-          updateData.estimatedCost = estimateCost(
+          updateData.estimatedCost = await estimateCost(
             request[0].model,
             data.usage.promptTokens,
             data.usage.completionTokens
