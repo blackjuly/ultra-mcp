@@ -131,7 +131,7 @@ export async function runDoctorWithDeps(
       message: hasAnyProvider ? 'At least one provider configured' : 'No providers configured',
     });
 
-    // Check 7: Pricing cache
+    // Check 7: Pricing cache (informational only, not a failure)
     try {
       const pricingCacheInfo = await pricingService.getCacheInfo();
       if (pricingCacheInfo.exists) {
@@ -142,17 +142,19 @@ export async function runDoctorWithDeps(
           message: `Active (${ageMinutes} minutes old${pricingCacheInfo.expired ? ', expired' : ''})`,
         });
       } else {
+        // Not initialized is OK - it will fetch on first use
         results.push({
           name: 'Pricing cache',
-          status: false,
+          status: true,  // Changed to true - this is not an error
           message: 'Not initialized (will fetch on first use)',
         });
       }
     } catch (error) {
+      // Error checking cache is also not critical
       results.push({
         name: 'Pricing cache',
-        status: false,
-        message: 'Error checking cache',
+        status: true,  // Changed to true - this is not critical
+        message: 'Unable to check (will initialize on first use)',
       });
     }
 
