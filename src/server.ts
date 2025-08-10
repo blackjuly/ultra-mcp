@@ -10,7 +10,7 @@ const DeepReasoningSchema = z.object({
   temperature: z.number().min(0).max(2).optional().default(0.7).describe("Temperature for response generation"),
   maxOutputTokens: z.number().positive().optional().describe("Maximum tokens in response"),
   systemPrompt: z.string().optional().describe("System prompt to set context for reasoning"),
-  reasoningEffort: z.enum(["low", "medium", "high"]).optional().default("high").describe("Reasoning effort level (for O3 models)"),
+  reasoningEffort: z.enum(["low", "medium", "high"]).optional().default("high").describe("Reasoning effort level (for certain reasoning models)"),
   enableSearch: z.boolean().optional().default(true).describe("Enable Google Search for Gemini models"),
 });
 
@@ -72,7 +72,7 @@ const ChallengeSchema = z.object({
 const ConsensusSchema = z.object({
   proposal: z.string().describe("The proposal, idea, or decision to analyze from multiple perspectives"),
   models: z.array(z.object({
-    model: z.string().describe("Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'o3')"),
+    model: z.string().describe("Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'gpt-5')"),
     stance: z.enum(["for", "against", "neutral"]).default("neutral").describe("Perspective stance for this model"),
     provider: z.enum(["openai", "gemini", "azure", "grok"]).optional().describe("AI provider for this model")
   })).min(1).describe("List of models to consult with their stances"),
@@ -204,7 +204,7 @@ export function createServer() {
   // Register deep-reasoning tool
   server.registerTool("deep-reasoning", {
     title: "Deep Reasoning",
-    description: "Use advanced AI models for deep reasoning and complex problem-solving. Supports O3 models for OpenAI/Azure and Gemini 2.5 Pro with Google Search.",
+    description: "Use advanced AI models for deep reasoning and complex problem-solving. Supports GPT-5 for OpenAI/Azure and Gemini 2.5 Pro with Google Search.",
     inputSchema: DeepReasoningSchema.shape,
   }, async (args) => {
     const aiHandlers = await getHandlers();

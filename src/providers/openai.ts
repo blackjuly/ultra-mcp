@@ -25,20 +25,29 @@ export class OpenAIProvider implements AIProvider {
   }
 
   getDefaultModel(): string {
-    return "o3"; // Default to O3 as requested
+    return "gpt-5";
+  }
+
+  private async getPreferredModel(): Promise<string> {
+    try {
+      const config = await this.configManager.getConfig();
+      return config.openai?.preferredModel || this.getDefaultModel();
+    } catch {
+      return this.getDefaultModel();
+    }
   }
 
   listModels(): string[] {
-    // Only list O3 model as per requirements
     return [
-      "o3",
+      "gpt-5",
     ];
   }
 
   async generateText(request: AIRequest): Promise<AIResponse> {
     const { apiKey, baseURL } = await this.getCredentials();
-    const model = request.model || this.getDefaultModel();
+    const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
+    const enforcedTemperature = 1;
 
     // Track the request
     const requestId = await trackLLMRequest({
@@ -48,7 +57,7 @@ export class OpenAIProvider implements AIProvider {
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
-        temperature: request.temperature,
+        temperature: enforcedTemperature,
         maxOutputTokens: request.maxOutputTokens,
         reasoningEffort: request.reasoningEffort,
       },
@@ -61,7 +70,7 @@ export class OpenAIProvider implements AIProvider {
     const options = {
       model: modelInstance,
       prompt: request.prompt,
-      temperature: request.temperature,
+      temperature: enforcedTemperature,
       maxOutputTokens: request.maxOutputTokens,
       ...(request.systemPrompt && { system: request.systemPrompt }),
       ...((model.startsWith("o3") || model.startsWith("o1")) && { 
@@ -112,8 +121,9 @@ export class OpenAIProvider implements AIProvider {
 
   async *streamText(request: AIRequest): AsyncGenerator<string, void, unknown> {
     const { apiKey, baseURL } = await this.getCredentials();
-    const model = request.model || this.getDefaultModel();
+    const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
+    const enforcedTemperature = 1;
 
     // Track the request
     const requestId = await trackLLMRequest({
@@ -123,7 +133,7 @@ export class OpenAIProvider implements AIProvider {
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
-        temperature: request.temperature,
+        temperature: enforcedTemperature,
         maxOutputTokens: request.maxOutputTokens,
         reasoningEffort: request.reasoningEffort,
       },
@@ -136,7 +146,7 @@ export class OpenAIProvider implements AIProvider {
     const options = {
       model: modelInstance,
       prompt: request.prompt,
-      temperature: request.temperature,
+      temperature: enforcedTemperature,
       maxOutputTokens: request.maxOutputTokens,
       ...(request.systemPrompt && { system: request.systemPrompt }),
       ...((model.startsWith("o3") || model.startsWith("o1")) && { 

@@ -105,7 +105,7 @@ bunx -y ultra-mcp chat
 bun dist/cli.js chat
 
 # Specify model and provider
-bunx -y ultra-mcp chat -m o3 -p openai
+bunx -y ultra-mcp chat -m gpt-5 -p openai
 bunx -y ultra-mcp chat -m grok-4 -p grok
 ```
 
@@ -338,7 +338,7 @@ Deep code analysis with:
 ### debug - Systematic Debugging
 ```bash
 bunx -y ultra-mcp debug "users cannot login after deployment"
-bunx -y ultra-mcp debug "memory leak in production" -m o3
+bunx -y ultra-mcp debug "memory leak in production" -m gpt-5
 ```
 
 Root cause analysis with:
@@ -380,13 +380,13 @@ Ultra MCP exposes the following AI-powered tools through the Model Context Proto
 Use advanced AI models for deep reasoning and complex problem-solving.
 
 - **Default Models**:
-  - OpenAI/Azure: O3 (optimized for reasoning)
+  - OpenAI/Azure: GPT-5 (optimized for reasoning)
   - Gemini: Gemini 2.5 Pro with Google Search enabled
 - **Parameters**:
   - `prompt`: The complex question or problem (required)
   - `provider`: (optional) "openai", "gemini", "azure", or "grok" - defaults to Azure if configured
   - `model`: (optional) Specific model to use
-  - `reasoningEffort`: (optional) "low", "medium", "high" (for O3 models)
+  - `reasoningEffort`: (optional) "low", "medium", "high" (for O-series reasoning models)
   - `enableSearch`: (optional) Enable Google Search (Gemini only)
 
 ### 2. `investigate`

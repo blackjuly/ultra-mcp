@@ -74,6 +74,7 @@ describe('ConfigSchema', () => {
       openai: {
         apiKey: undefined,
         baseURL: undefined,
+        preferredModel: 'gpt-5',
       },
       google: {
         apiKey: undefined,
@@ -83,6 +84,7 @@ describe('ConfigSchema', () => {
         apiKey: undefined,
         resourceName: undefined,
         baseURL: undefined,
+        preferredModel: 'gpt-5',
       },
       xai: {
         apiKey: undefined,
@@ -93,6 +95,7 @@ describe('ConfigSchema', () => {
         baseURL: 'http://localhost:11434/v1',
         providerName: 'ollama',
         models: undefined,
+        preferredModel: undefined,
       },
       vectorConfig: {
         defaultProvider: 'openai',

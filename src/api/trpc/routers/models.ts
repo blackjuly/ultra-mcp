@@ -14,11 +14,11 @@ export const modelsRouter = router({
     // OpenAI models
     if (config.openai?.apiKey) {
       models.push(
-        { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai', description: 'Most capable model' },
+        { id: 'gpt-5', name: 'GPT-5', provider: 'openai', description: 'Latest reasoning model' },
+        { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai', description: 'Multimodal model' },
         { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', description: 'Faster, cheaper' },
         { id: 'o1', name: 'O1', provider: 'openai', description: 'Advanced reasoning' },
         { id: 'o1-mini', name: 'O1 Mini', provider: 'openai', description: 'Efficient reasoning' },
-        { id: 'o3', name: 'O3', provider: 'openai', description: 'Latest reasoning model' },
       );
     }
     
@@ -34,9 +34,9 @@ export const modelsRouter = router({
     // Azure models
     if (config.azure?.apiKey) {
       models.push(
+        { id: 'gpt-5', name: 'GPT-5 (Azure)', provider: 'azure', description: 'Latest reasoning' },
         { id: 'gpt-4o', name: 'GPT-4o (Azure)', provider: 'azure', description: 'Enterprise grade' },
         { id: 'gpt-4o-mini', name: 'GPT-4o Mini (Azure)', provider: 'azure', description: 'Cost effective' },
-        { id: 'o3', name: 'O3 (Azure)', provider: 'azure', description: 'Latest reasoning' },
       );
     }
     
@@ -48,7 +48,7 @@ export const modelsRouter = router({
     return {
       defaultProvider: 'azure',
       modelPriorities: [
-        { model: 'o3', priority: 1 },
+        { model: 'gpt-5', priority: 1 },
         { model: 'gpt-4o', priority: 2 },
         { model: 'gemini-2.0-flash-exp', priority: 3 },
       ],

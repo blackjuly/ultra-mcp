@@ -542,6 +542,12 @@ async function configureOpenAI(configManager: ConfigManager): Promise<void> {
       message: 'OpenAI Base URL (optional, leave empty for default):',
       initial: currentConfig.openai?.baseURL || '',
     },
+    {
+      type: 'text',
+      name: 'preferredModel',
+      message: 'Preferred model (default: gpt-5):',
+      initial: currentConfig.openai?.preferredModel || 'gpt-5',
+    },
   ]);
 
   if (response.apiKey && response.apiKey !== '(current value hidden)') {
@@ -557,6 +563,19 @@ async function configureOpenAI(configManager: ConfigManager): Promise<void> {
   if (response.baseURL !== undefined && response.baseURL !== currentConfig.openai?.baseURL) {
     await configManager.setBaseURL('openai', response.baseURL || undefined);
     console.log(chalk.green('OpenAI Base URL updated'));
+  }
+
+  // Save preferred model
+  if (response.preferredModel !== undefined && response.preferredModel !== currentConfig.openai?.preferredModel) {
+    await configManager.updateConfig({
+      ...currentConfig,
+      openai: {
+        apiKey: currentConfig.openai?.apiKey,
+        baseURL: currentConfig.openai?.baseURL,
+        preferredModel: response.preferredModel || 'gpt-5',
+      }
+    });
+    console.log(chalk.green('OpenAI preferred model updated'));
   }
   
   console.log(chalk.green('\\n✅ OpenAI configuration saved!'));
@@ -626,6 +645,12 @@ async function configureAzure(configManager: ConfigManager): Promise<void> {
       message: 'Azure Resource Name (optional):',
       initial: currentConfig.azure?.resourceName || '',
     },
+    {
+      type: 'text',
+      name: 'preferredModel',
+      message: 'Preferred model (default: gpt-5):',
+      initial: currentConfig.azure?.preferredModel || 'gpt-5',
+    },
   ]);
 
   if (response.apiKey && response.apiKey !== '(current value hidden)') {
@@ -646,6 +671,20 @@ async function configureAzure(configManager: ConfigManager): Promise<void> {
   if (response.resourceName !== undefined && response.resourceName !== currentConfig.azure?.resourceName) {
     await configManager.setAzureResourceName(response.resourceName || undefined);
     console.log(chalk.green('Azure Resource Name updated'));
+  }
+  
+  // Save preferred model
+  if (response.preferredModel !== undefined && response.preferredModel !== currentConfig.azure?.preferredModel) {
+    await configManager.updateConfig({
+      ...currentConfig,
+      azure: {
+        apiKey: currentConfig.azure?.apiKey,
+        baseURL: currentConfig.azure?.baseURL,
+        resourceName: currentConfig.azure?.resourceName,
+        preferredModel: response.preferredModel || 'gpt-5',
+      }
+    });
+    console.log(chalk.green('Azure preferred model updated'));
   }
   
   console.log(chalk.green('\\n✅ Azure OpenAI configuration saved!'));

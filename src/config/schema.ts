@@ -27,6 +27,7 @@ export const ConfigSchema = z.object({
   openai: z.object({
     apiKey: ApiKeySchema,
     baseURL: z.string().url().optional(),
+    preferredModel: z.string().optional(),
   }).optional(),
   google: z.object({
     apiKey: ApiKeySchema,
@@ -37,6 +38,7 @@ export const ConfigSchema = z.object({
     apiKey: ApiKeySchema,
     resourceName: z.string().optional(),
     baseURL: z.string().url().optional(),
+    preferredModel: z.string().optional(),
   }).optional(),
   xai: z.object({
     apiKey: ApiKeySchema,
@@ -60,6 +62,7 @@ export const defaultConfig: Config = {
   openai: {
     apiKey: undefined,
     baseURL: undefined,
+    preferredModel: 'gpt-5',
   },
   google: {
     apiKey: undefined,
@@ -69,6 +72,7 @@ export const defaultConfig: Config = {
     apiKey: undefined,
     resourceName: undefined,
     baseURL: undefined,
+    preferredModel: 'gpt-5',
   },
   xai: {
     apiKey: undefined,

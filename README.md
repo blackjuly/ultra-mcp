@@ -53,9 +53,9 @@ While inspired by zen-mcp-server, Ultra MCP offers several key advantages:
 
 ## Features
 
-- 🤖 **Multi-Model Support**: Integrate OpenAI (O3), Google Gemini (2.5 Pro), Azure OpenAI, and xAI Grok models
+- 🤖 **Multi-Model Support**: Integrate OpenAI (GPT-5), Google Gemini (2.5 Pro), Azure OpenAI, and xAI Grok models
 - 🔌 **MCP Protocol**: Standard Model Context Protocol interface
-- 🧠 **Deep Reasoning Tools**: Access O3 models for complex problem-solving
+- 🧠 **Deep Reasoning Tools**: Access GPT-5 for complex problem-solving
 - 🔍 **Investigation & Research**: Built-in tools for thorough investigation and research
 - 🌐 **Google Search Integration**: Gemini 2.5 Pro with real-time web search
 - ⚡ **Real-time Streaming**: Live model responses via Vercel AI SDK
@@ -103,7 +103,7 @@ This will:
 npx -y ultra-mcp
 
 # Or after building locally
-npm run build
+bun run build
 node dist/cli.js
 ```
 
@@ -158,7 +158,7 @@ Check installation health and test API connections.
 npx -y ultra-mcp chat
 
 # Specify model and provider
-npx -y ultra-mcp chat -m o3 -p openai
+npx -y ultra-mcp chat -m gpt-5 -p openai
 npx -y ultra-mcp chat -m grok-4 -p grok
 ```
 
@@ -252,7 +252,7 @@ Ultra MCP provides powerful AI tools accessible through Claude Code and Cursor:
 
 Leverage advanced AI models for complex problem-solving and analysis.
 
-- **Default**: O3 for OpenAI/Azure, Gemini 2.5 Pro with Google Search, Grok-4 for xAI
+- **Default**: GPT-5 for OpenAI/Azure, Gemini 2.5 Pro with Google Search, Grok-4 for xAI
 - **Use Cases**: Complex algorithms, architectural decisions, deep analysis
 
 ### 🔍 Investigate (`investigate`)
@@ -293,16 +293,16 @@ git clone https://github.com/RealMikeChong/ultra-mcp
 cd ultra-mcp
 
 # Install dependencies
-npm install
+bun install
 
 # Build TypeScript
-npm run build
+bun run build
 
 # Run tests
-npm test
+bun run test
 
 # Development mode with watch
-npm run dev
+bun run dev
 
 # Test with MCP Inspector
 npx @modelcontextprotocol/inspector node dist/cli.js
@@ -423,13 +423,13 @@ You can customize the embedding models in your configuration:
 
 ```bash
 # Run all tests
-npm test
+bun run test
 
 # Run tests with UI
-npm run test:ui
+bun run test:ui
 
 # Run tests with coverage
-npm run test:coverage
+bun run test:coverage
 ```
 
 ## License

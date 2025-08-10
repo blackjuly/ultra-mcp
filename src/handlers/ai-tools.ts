@@ -9,7 +9,7 @@ const DeepReasoningSchema = z.object({
   temperature: z.number().min(0).max(2).optional().default(0.7).describe("Temperature for response generation"),
   maxOutputTokens: z.number().positive().optional().describe("Maximum tokens in response"),
   systemPrompt: z.string().optional().describe("System prompt to set context for reasoning"),
-  reasoningEffort: z.enum(["low", "medium", "high"]).optional().default("high").describe("Reasoning effort level (for O3 models)"),
+  reasoningEffort: z.enum(["low", "medium", "high"]).optional().default("high").describe("Reasoning effort level (for certain reasoning models)"),
   enableSearch: z.boolean().optional().default(true).describe("Enable Google Search for Gemini models"),
 });
 
@@ -76,7 +76,7 @@ const ChallengeSchema = z.object({
 const ConsensusSchema = z.object({
   proposal: z.string().describe("The proposal, idea, or decision to analyze from multiple perspectives"),
   models: z.array(z.object({
-    model: z.string().describe("Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'o3')"),
+    model: z.string().describe("Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'gpt-5')"),
     stance: z.enum(["for", "against", "neutral"]).default("neutral").describe("Perspective stance for this model"),
     provider: z.enum(["openai", "gemini", "azure", "grok"]).optional().describe("AI provider for this model")
   })).min(1).describe("List of models to consult with their stances"),
@@ -281,7 +281,7 @@ export class AIToolHandlers {
     }
 
     response += `\n## Default Models\n`;
-    response += `- OpenAI/Azure: o3 (optimized for reasoning)\n`;
+    response += `- OpenAI/Azure: gpt-5 (optimized for reasoning)\n`;
     response += `- Gemini: gemini-2.5-pro (with Google Search enabled)\n`;
     response += `- Grok: grok-4 (latest xAI model with reasoning support)\n`;
 
@@ -1366,7 +1366,7 @@ Explain these options clearly and wait for the user to specify which mode to use
     return [
       {
         name: "deep-reasoning",
-        description: "Use advanced AI models for deep reasoning and complex problem-solving. Supports O3 models for OpenAI/Azure and Gemini 2.5 Pro with Google Search.",
+        description: "Use advanced AI models for deep reasoning and complex problem-solving. Supports GPT-5 for OpenAI/Azure and Gemini 2.5 Pro with Google Search.",
         inputSchema: {
           type: "object",
           properties: {
@@ -1402,7 +1402,7 @@ Explain these options clearly and wait for the user to specify which mode to use
               type: "string",
               enum: ["low", "medium", "high"],
               default: "high",
-              description: "Reasoning effort level (for O3 models)",
+              description: "Reasoning effort level (for certain reasoning models)",
             },
             enableSearch: {
               type: "boolean",
@@ -1675,7 +1675,7 @@ Explain these options clearly and wait for the user to specify which mode to use
                 properties: {
                   model: {
                     type: "string",
-                    description: "Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'o3')",
+                    description: "Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'gpt-5')",
                   },
                   stance: {
                     type: "string",

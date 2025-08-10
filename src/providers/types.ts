@@ -6,7 +6,7 @@ export const AIRequestSchema = z.object({
   temperature: z.number().min(0).max(2).optional().default(0.7).describe("Temperature for response generation"),
   maxOutputTokens: z.number().positive().optional().describe("Maximum tokens in response"),
   systemPrompt: z.string().optional().describe("System prompt to set context"),
-  reasoningEffort: z.enum(["low", "medium", "high"]).optional().describe("Reasoning effort for O3 models"),
+  reasoningEffort: z.enum(["low", "medium", "high"]).optional().describe("Reasoning effort for certain reasoning models"),
   useSearchGrounding: z.boolean().optional().default(false).describe("Enable Google Search for Gemini models"),
   toolName: z.string().optional().describe("Name of the MCP tool that triggered this request"),
 });

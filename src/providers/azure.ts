@@ -40,20 +40,29 @@ export class AzureOpenAIProvider implements AIProvider {
   }
 
   getDefaultModel(): string {
-    return "o3"; // Default to O3 as requested
+    return "gpt-5";
+  }
+
+  private async getPreferredModel(): Promise<string> {
+    try {
+      const config = await this.configManager.getConfig();
+      return config.azure?.preferredModel || this.getDefaultModel();
+    } catch {
+      return this.getDefaultModel();
+    }
   }
 
   listModels(): string[] {
-    // Only list O3 model as per requirements
     return [
-      "o3",
+      "gpt-5",
     ];
   }
 
   async generateText(request: AIRequest): Promise<AIResponse> {
     const { apiKey, resourceName, baseURL } = await this.getCredentials();
-    const model = request.model || this.getDefaultModel();
+    const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
+    const enforcedTemperature = 1;
     
     // Track the request
     const requestId = await trackLLMRequest({
@@ -63,7 +72,7 @@ export class AzureOpenAIProvider implements AIProvider {
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
-        temperature: request.temperature,
+        temperature: enforcedTemperature,
         maxOutputTokens: request.maxOutputTokens,
         reasoningEffort: request.reasoningEffort,
       },
@@ -94,7 +103,7 @@ export class AzureOpenAIProvider implements AIProvider {
     const options: GenerateTextOptions = {
       model: modelInstance,
       prompt: request.prompt,
-      temperature: request.temperature,
+      temperature: enforcedTemperature,
       maxOutputTokens: request.maxOutputTokens,
       onFinish: async (result) => {
         // Track completion using onFinish callback
@@ -145,8 +154,9 @@ export class AzureOpenAIProvider implements AIProvider {
 
   async *streamText(request: AIRequest): AsyncGenerator<string, void, unknown> {
     const { apiKey, resourceName, baseURL } = await this.getCredentials();
-    const model = request.model || this.getDefaultModel();
+    const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
+    const enforcedTemperature = 1;
     
     // Track the request
     const requestId = await trackLLMRequest({
@@ -156,7 +166,7 @@ export class AzureOpenAIProvider implements AIProvider {
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
-        temperature: request.temperature,
+        temperature: enforcedTemperature,
         maxOutputTokens: request.maxOutputTokens,
         reasoningEffort: request.reasoningEffort,
       },
@@ -173,7 +183,7 @@ export class AzureOpenAIProvider implements AIProvider {
     const options: any = {
       model: modelInstance,
       prompt: request.prompt,
-      temperature: request.temperature,
+      temperature: enforcedTemperature,
       maxOutputTokens: request.maxOutputTokens,
       onFinish: async (event: any) => {
         // Track completion using onFinish callback
