@@ -30,9 +30,6 @@ describe('LLM Tracking', () => {
     expect(requestId).toBeDefined();
     expect(typeof requestId).toBe('string');
 
-    // Wait a moment for async database write
-    await new Promise(resolve => setTimeout(resolve, 100));
-
     // Update completion
     await updateLLMCompletion({
       requestId,
@@ -45,9 +42,6 @@ describe('LLM Tracking', () => {
       finishReason: 'stop',
       endTime: Date.now(),
     });
-
-    // Wait for async database write
-    await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify data was stored
     const db = await getDatabase();
@@ -93,9 +87,6 @@ describe('LLM Tracking', () => {
         endTime: Date.now(),
       });
     }
-
-    // Wait for async writes
-    await new Promise(resolve => setTimeout(resolve, 200));
 
     const stats = await getUsageStats(30);
     expect(stats).toBeDefined();
