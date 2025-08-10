@@ -75,11 +75,12 @@ export class GeminiProvider implements AIProvider {
       }) => Promise<void>;
     };
 
-    const options: GenerateTextOptions = {
+    const options: GenerateTextOptions & { googleSearchGrounding?: boolean } = {
       model: modelInstance,
       prompt: request.prompt,
       temperature: request.temperature,
       maxOutputTokens: request.maxOutputTokens,
+      googleSearchGrounding: useSearchGrounding,
       onFinish: async (result) => {
         // Track completion using onFinish callback
         await updateLLMCompletion({
@@ -157,6 +158,7 @@ export class GeminiProvider implements AIProvider {
       prompt: request.prompt,
       temperature: request.temperature,
       maxOutputTokens: request.maxOutputTokens,
+      googleSearchGrounding: useSearchGrounding,
       onFinish: async (event: any) => {
         // Track completion using onFinish callback
         const usage = event.totalUsage ? {

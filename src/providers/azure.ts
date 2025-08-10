@@ -55,6 +55,7 @@ export class AzureOpenAIProvider implements AIProvider {
   listModels(): string[] {
     return [
       "gpt-5",
+      "o3",
     ];
   }
 
@@ -62,7 +63,8 @@ export class AzureOpenAIProvider implements AIProvider {
     const { apiKey, resourceName, baseURL } = await this.getCredentials();
     const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
-    const enforcedTemperature = 1;
+    // GPT-5 and O3 require temperature=1
+    const enforcedTemperature = (model === 'gpt-5' || model === 'o3') ? 1 : (request.temperature ?? 0.7);
     
     // Track the request
     const requestId = await trackLLMRequest({
@@ -156,7 +158,8 @@ export class AzureOpenAIProvider implements AIProvider {
     const { apiKey, resourceName, baseURL } = await this.getCredentials();
     const model = request.model || await this.getPreferredModel();
     const startTime = Date.now();
-    const enforcedTemperature = 1;
+    // GPT-5 and O3 require temperature=1
+    const enforcedTemperature = (model === 'gpt-5' || model === 'o3') ? 1 : (request.temperature ?? 0.7);
     
     // Track the request
     const requestId = await trackLLMRequest({

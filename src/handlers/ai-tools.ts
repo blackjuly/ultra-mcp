@@ -155,7 +155,7 @@ export class AIToolHandlers {
       maxOutputTokens: params.maxOutputTokens,
       systemPrompt,
       reasoningEffort: params.reasoningEffort,
-      useSearchGrounding: providerName === "gemini" ? params.enableSearch : false,
+      useSearchGrounding: providerName === "gemini" ? (params.enableSearch !== false) : false,
       toolName: 'deep-reasoning',
     });
 
@@ -198,7 +198,7 @@ export class AIToolHandlers {
       model: params.model,
       systemPrompt,
       reasoningEffort: (providerName === "openai" || providerName === "azure" || providerName === "grok") ? "high" : undefined,
-      useSearchGrounding: providerName === "gemini" ? params.enableSearch : false,
+      useSearchGrounding: providerName === "gemini" ? (params.enableSearch !== false) : false,
       temperature: 0.5, // Lower temperature for investigation
     });
 
