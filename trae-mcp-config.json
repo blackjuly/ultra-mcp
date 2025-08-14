@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ultra-mcp-local": {
+      "command": "node",
+      "args": [
+        "dist/cli.js"
+      ],
+      "cwd": "C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp",
+      "env": {
+        "HTTP_PROXY": "http://127.0.0.1:7897",
+        "HTTPS_PROXY": "http://127.0.0.1:7897",
+        "GLOBAL_AGENT_HTTPS_PROXY": "http://127.0.0.1:7897"
+      }
+    }
+  }
+}

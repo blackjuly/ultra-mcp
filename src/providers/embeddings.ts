@@ -1,9 +1,10 @@
-import { embed, EmbeddingModel } from 'ai';
+import { embed, embedMany, EmbeddingModel } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAzure } from '@ai-sdk/azure';
 import { ConfigManager } from '../config/manager';
 import { logger } from '../utils/logger';
+import { ProxyAgent } from 'undici';
 
 export interface EmbeddingConfig {
   provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible';
@@ -57,9 +58,9 @@ export class EmbeddingProvider {
       }
       
       // Use batch processing for other providers (OpenAI, Gemini)
-      const result = await embed({
+      const result = await embedMany({
         model,
-        value: texts,
+        values: texts,
       });
       
       return result.embeddings;
@@ -72,6 +73,21 @@ export class EmbeddingProvider {
   private async getEmbeddingModel(): Promise<EmbeddingModel<any>> {
     const config = await this.configManager.getConfig();
     
+    // Check for proxy configuration
+    const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.GLOBAL_AGENT_HTTPS_PROXY;
+    let customFetch: typeof fetch | undefined;
+    
+    if (proxyUrl) {
+      const proxyAgent = new ProxyAgent(proxyUrl);
+      customFetch = (url: string | URL | Request, init?: RequestInit) => {
+        return fetch(url, {
+          ...init,
+          // @ts-ignore - ProxyAgent is compatible with fetch dispatcher
+          dispatcher: proxyAgent
+        });
+      };
+    }
+    
     switch (this.config.provider) {
       case 'openai': {
         const apiKey = this.config.apiKey || config.openai?.apiKey;
@@ -82,6 +98,7 @@ export class EmbeddingProvider {
         const openaiInstance = createOpenAI({
           apiKey,
           baseURL: this.config.baseURL || config.openai?.baseURL,
+          fetch: customFetch,
         });
         const modelName = this.config.model || config.vectorConfig?.embeddingModel?.openai || 'text-embedding-3-small';
         return openaiInstance.embedding(modelName);
@@ -112,6 +129,7 @@ export class EmbeddingProvider {
         const azure = createAzure({
           apiKey,
           resourceName,
+          fetch: customFetch,
         });
         
         const modelName = this.config.model || config.vectorConfig?.embeddingModel?.azure || 'text-embedding-3-small';
@@ -127,6 +145,7 @@ export class EmbeddingProvider {
         const googleInstance = createGoogleGenerativeAI({
           apiKey,
           baseURL: this.config.baseURL || config.google?.baseURL,
+          fetch: customFetch,
         });
         const modelName = this.config.model || config.vectorConfig?.embeddingModel?.gemini || 'text-embedding-004';
         return googleInstance.embedding(modelName);
