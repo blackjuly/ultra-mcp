@@ -88,12 +88,14 @@
     "drizzle-orm": "^0.44.2",
     "express": "4",
     "fast-glob": "^3.3.2",
+    "https-proxy-agent": "^7.0.6",
     "ignore": "^5.3.0",
     "langchain": "^0.3.0",
     "morgan": "^1.10.1",
     "open": "^8.4.0",
     "ora": "^5.4.1",
     "prompts": "^2.4.2",
+    "undici": "^7.13.0",
     "zod": "^3.25.67"
   }
 }

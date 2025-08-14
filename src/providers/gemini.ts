@@ -3,6 +3,7 @@ import { generateText, streamText } from "ai";
 import { AIProvider, AIRequest, AIResponse } from "./types";
 import { ConfigManager } from "../config/manager";
 import { trackLLMRequest, updateLLMCompletion } from "../db/tracking";
+import { ProxyAgent } from "undici";
 
 export class GeminiProvider implements AIProvider {
   name = "gemini";
@@ -12,7 +13,7 @@ export class GeminiProvider implements AIProvider {
     this.configManager = configManager;
   }
 
-  private async getApiKey(): Promise<{ apiKey: string; baseURL?: string }> {
+  private async getApiKey(): Promise<{ apiKey: string; baseURL?: string; fetch?: typeof fetch }> {
     const config = await this.configManager.getConfig();
     const apiKey = config.google?.apiKey || process.env.GOOGLE_API_KEY;
     const baseURL = config.google?.baseURL || process.env.GOOGLE_BASE_URL;
@@ -20,7 +21,22 @@ export class GeminiProvider implements AIProvider {
       throw new Error("Google API key not configured. Run 'ultra config' or set GOOGLE_API_KEY environment variable.");
     }
     
-    return { apiKey, baseURL };
+    // Check for proxy configuration
+    const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY || process.env.GLOBAL_AGENT_HTTPS_PROXY;
+    let customFetch: typeof fetch | undefined;
+    
+    if (proxyUrl) {
+      const proxyAgent = new ProxyAgent(proxyUrl);
+      customFetch = (url: string | URL | Request, init?: RequestInit) => {
+        return fetch(url, {
+          ...init,
+          // @ts-ignore - ProxyAgent is compatible with fetch dispatcher
+          dispatcher: proxyAgent
+        });
+      };
+    }
+    
+    return { apiKey, baseURL, fetch: customFetch };
   }
 
   getDefaultModel(): string {
@@ -35,7 +51,7 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateText(request: AIRequest): Promise<AIResponse> {
-    const { apiKey, baseURL } = await this.getApiKey();
+    const { apiKey, baseURL, fetch: customFetch } = await this.getApiKey();
     const model = request.model || this.getDefaultModel();
     const startTime = Date.now();
     
@@ -59,7 +75,11 @@ export class GeminiProvider implements AIProvider {
       startTime,
     });
 
-    const google = createGoogleGenerativeAI({ apiKey, baseURL });
+    const google = createGoogleGenerativeAI({ 
+      apiKey, 
+      baseURL,
+      fetch: customFetch
+    });
     const modelInstance = google(model);
     
     type GenerateTextOptions = {
@@ -127,7 +147,7 @@ export class GeminiProvider implements AIProvider {
   }
 
   async *streamText(request: AIRequest): AsyncGenerator<string, void, unknown> {
-    const { apiKey, baseURL } = await this.getApiKey();
+    const { apiKey, baseURL, fetch: customFetch } = await this.getApiKey();
     const model = request.model || this.getDefaultModel();
     const startTime = Date.now();
     
@@ -150,7 +170,11 @@ export class GeminiProvider implements AIProvider {
       startTime,
     });
 
-    const google = createGoogleGenerativeAI({ apiKey, baseURL });
+    const google = createGoogleGenerativeAI({ 
+      apiKey, 
+      baseURL,
+      fetch: customFetch
+    });
     const modelInstance = google(model);
     
     const options: any = {
