@@ -55,6 +55,7 @@ While inspired by zen-mcp-server, Ultra MCP offers several key advantages:
 
 - 🤖 **Multi-Model Support**: Integrate OpenAI (GPT-5), Google Gemini (2.5 Pro), Azure OpenAI, and xAI Grok models
 - 🔌 **MCP Protocol**: Standard Model Context Protocol interface
+- 🎯 **Discoverable Prompts**: All 25 tools available as prompts in Claude Code (New in v0.7.0)
 - 🧠 **Deep Reasoning Tools**: Access GPT-5 for complex problem-solving
 - 🔍 **Investigation & Research**: Built-in tools for thorough investigation and research
 - 🌐 **Google Search Integration**: Gemini 2.5 Pro with real-time web search
@@ -244,9 +245,27 @@ Then add to your Cursor MCP settings:
 
 Ultra MCP will automatically use the API keys you configured with the `config` command.
 
-## MCP Tools
+## MCP Tools & Prompts
 
-Ultra MCP provides powerful AI tools accessible through Claude Code and Cursor:
+Ultra MCP provides powerful AI tools accessible through Claude Code and Cursor. **New in v0.7.0**: All tools are now also available as **discoverable prompts** in Claude Code.
+
+### 🎯 Prompts Support (New in v0.7.0)
+
+All Ultra MCP tools are now exposed as **discoverable prompts** in Claude Code, making them even easier to use:
+
+- **25 discoverable prompts** corresponding to all existing tools
+- **Parameter guidance** built into each prompt template
+- **Natural language interface** for all AI capabilities
+- **Automatic discovery** by Claude Code and other MCP clients
+
+**How to use prompts:**
+
+1. Type `/` in Claude Code to see available prompts
+2. Select any Ultra MCP prompt (e.g., "Deep Reasoning", "Code Review", "Debug Issue")
+3. Fill in the parameters through the guided interface
+4. Claude automatically generates the appropriate instruction
+
+This makes Ultra MCP's powerful AI capabilities more accessible than ever!
 
 ### 🧠 Deep Reasoning (`deep-reasoning`)
 

@@ -125,22 +125,22 @@ const TracerSchema = z.object({
 
 // Vector indexing schemas
 const IndexVectorsSchema = z.object({
-  path: z.string().default(process.cwd()).describe("Project path to index (defaults to current directory)"),
+  path: z.string().optional().describe("Project path to index (defaults to current directory)"),
   provider: z.enum(["openai", "azure", "gemini"]).optional().describe("Embedding provider to use (defaults to configured provider)"),
-  force: z.boolean().default(false).describe("Force re-indexing of all files"),
+  force: z.boolean().optional().describe("Force re-indexing of all files"),
 });
 
 const SearchVectorsSchema = z.object({
   query: z.string().describe("Natural language search query"),
-  path: z.string().default(process.cwd()).describe("Project path to search (defaults to current directory)"),
+  path: z.string().optional().describe("Project path to search (defaults to current directory)"),
   provider: z.enum(["openai", "azure", "gemini"]).optional().describe("Embedding provider to use (defaults to configured provider)"),
-  limit: z.number().min(1).max(50).default(10).describe("Maximum number of results"),
-  similarityThreshold: z.number().min(0).max(1).default(0.7).describe("Minimum similarity score (0-1)"),
-  filesOnly: z.boolean().default(false).describe("Return only file paths without chunks"),
+  limit: z.number().min(1).max(50).optional().describe("Maximum number of results"),
+  similarityThreshold: z.number().min(0).max(1).optional().describe("Minimum similarity score (0-1)"),
+  filesOnly: z.boolean().optional().describe("Return only file paths without chunks"),
 });
 
 const ClearVectorsSchema = z.object({
-  path: z.string().default(process.cwd()).describe("Project path to clear vectors from (defaults to current directory)"),
+  path: z.string().optional().describe("Project path to clear vectors from (defaults to current directory)"),
 });
 
 export function createServer() {
@@ -453,6 +453,335 @@ export function createServer() {
       ]
     };
   });
+
+  // Register prompts for all tools
+
+  // Core AI tool prompts
+  server.registerPrompt("deep-reasoning", {
+    title: "Deep Reasoning",
+    description: "Use advanced AI reasoning to solve complex problems requiring deep analysis",
+    argsSchema: DeepReasoningSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Use advanced AI reasoning to solve this complex problem: ${args.prompt}${args.provider ? ` (using ${args.provider} provider)` : ''}${args.reasoningEffort ? ` with ${args.reasoningEffort} reasoning effort` : ''}${args.systemPrompt ? `\n\nSystem context: ${args.systemPrompt}` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("investigate", {
+    title: "Investigate Topic",
+    description: "Thoroughly investigate any topic with configurable depth of analysis",
+    argsSchema: InvestigationSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Investigate this topic with ${args.depth} analysis: ${args.topic}${args.provider ? ` (using ${args.provider} provider)` : ''}${args.enableSearch ? ' (include web search results)' : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("research", {
+    title: "Comprehensive Research",
+    description: "Conduct thorough research on any topic with multiple output formats",
+    argsSchema: ResearchSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Research this topic thoroughly: ${args.query}${args.outputFormat ? ` (format: ${args.outputFormat})` : ''}${args.sources && args.sources.length > 0 ? `\n\nFocus on these sources: ${args.sources.join(', ')}` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("list-ai-models", {
+    title: "List AI Models",
+    description: "Show all available AI models and their configuration status",
+    argsSchema: {},
+  }, () => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: "Show me all available AI models and their configuration status"
+      }
+    }]
+  }));
+
+  // Code tool prompts
+  server.registerPrompt("analyze-code", {
+    title: "Analyze Code",
+    description: "Analyze code for architecture, performance, security, or quality issues",
+    argsSchema: AnalyzeCodeSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Analyze this code: ${args.task}${args.files && args.files.length > 0 ? `\n\nFocus on these files: ${args.files.join(', ')}` : ''}${args.focus ? ` (analysis focus: ${args.focus})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("review-code", {
+    title: "Review Code",
+    description: "Review code for bugs, security issues, performance, or style problems",
+    argsSchema: ReviewCodeSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Review this code: ${args.task}${args.files && args.files.length > 0 ? `\n\nFocus on these files: ${args.files.join(', ')}` : ''}${args.focus ? ` (review focus: ${args.focus})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("debug-issue", {
+    title: "Debug Issue",
+    description: "Debug technical issues with systematic problem-solving approach",
+    argsSchema: DebugIssueSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Debug this issue: ${args.task}${args.files && args.files.length > 0 ? `\n\nRelevant files: ${args.files.join(', ')}` : ''}${args.symptoms ? `\n\nSymptoms observed: ${args.symptoms}` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("plan-feature", {
+    title: "Plan Feature",
+    description: "Plan feature implementation with comprehensive step-by-step approach",
+    argsSchema: PlanFeatureSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Plan this feature implementation: ${args.task}${args.requirements ? `\n\nRequirements: ${args.requirements}` : ''}${args.scope ? ` (planning scope: ${args.scope})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("generate-docs", {
+    title: "Generate Documentation",
+    description: "Generate comprehensive documentation in various formats",
+    argsSchema: GenerateDocsSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Generate documentation for: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to document: ${args.files.join(', ')}` : ''}${args.format ? ` (format: ${args.format})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  // Advanced tool prompts
+  server.registerPrompt("challenge", {
+    title: "Challenge Statement",
+    description: "Challenge a statement or assumption with critical thinking",
+    argsSchema: ChallengeSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Challenge this statement with critical thinking and provide alternative perspectives: ${args.prompt}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("consensus", {
+    title: "Multi-Model Consensus",
+    description: "Get consensus from multiple AI models on a proposal or decision",
+    argsSchema: ConsensusSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Get multi-model consensus on this proposal: ${args.proposal}\n\nConsult these models: ${args.models.map(m => `${m.model} (stance: ${m.stance})`).join(', ')}${args.files && args.files.length > 0 ? `\n\nRelevant files for context: ${args.files.join(', ')}` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("planner", {
+    title: "Multi-Step Planning",
+    description: "Create detailed multi-step plans with revisions and branching support",
+    argsSchema: PlannerSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Create a detailed plan for: ${args.task} (Step ${args.stepNumber} of ${args.totalSteps})${args.scope ? ` (scope: ${args.scope})` : ''}${args.requirements ? `\n\nRequirements: ${args.requirements}` : ''}${args.isRevision ? `\n\nThis is a revision of step ${args.revisingStep}` : ''}${args.isBranching ? `\n\nThis branches from step ${args.branchingFrom} as ${args.branchId}` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("precommit", {
+    title: "Pre-commit Validation",
+    description: "Validate code changes before committing with comprehensive checks",
+    argsSchema: PrecommitSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Validate these changes before commit: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to check: ${args.files.join(', ')}` : ''}${args.focus ? ` (focus: ${args.focus})` : ''}${args.compareTo ? `\n\nCompare against: ${args.compareTo}` : ''}${args.severity ? ` (minimum severity: ${args.severity})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("secaudit", {
+    title: "Security Audit", 
+    description: "Comprehensive security audit for code and configurations",
+    argsSchema: SecauditSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Perform security audit: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to audit: ${args.files.join(', ')}` : ''}${args.focus ? ` (focus: ${args.focus})` : ''}${args.threatLevel ? ` (threat level: ${args.threatLevel})` : ''}${args.complianceRequirements && args.complianceRequirements.length > 0 ? `\n\nCompliance requirements: ${args.complianceRequirements.join(', ')}` : ''}${args.securityScope ? `\n\nApplication context: ${args.securityScope}` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("tracer", {
+    title: "Code Tracer",
+    description: "Trace execution flow and debug complex code relationships", 
+    argsSchema: TracerSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Trace this code: ${args.task}${args.traceMode ? ` (trace mode: ${args.traceMode})` : ''}${args.targetDescription ? `\n\nTarget to trace: ${args.targetDescription}` : ''}${args.files && args.files.length > 0 ? `\n\nFocus on files: ${args.files.join(', ')}` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  // Workflow tool prompts
+  server.registerPrompt("ultra-review", {
+    title: "Ultra Code Review",
+    description: "Comprehensive step-by-step code review with detailed analysis",
+    argsSchema: CodeReviewSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Perform comprehensive code review: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to review: ${args.files.join(', ')}` : ''}${args.focus ? ` (focus: ${args.focus})` : ''} (Step ${args.stepNumber} of ${args.totalSteps})`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-analyze", {
+    title: "Ultra Code Analysis",
+    description: "Deep step-by-step code analysis with architectural insights",
+    argsSchema: CodeAnalysisSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Perform deep code analysis: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to analyze: ${args.files.join(', ')}` : ''}${args.focus ? ` (focus: ${args.focus})` : ''} (Step ${args.stepNumber} of ${args.totalSteps})`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-debug", {
+    title: "Ultra Debug Analysis",
+    description: "Systematic step-by-step debugging with root cause analysis",
+    argsSchema: DebugSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Debug this issue systematically: ${args.issue}${args.files && args.files.length > 0 ? `\n\nRelevant files: ${args.files.join(', ')}` : ''}${args.symptoms ? `\n\nSymptoms: ${args.symptoms}` : ''} (Step ${args.stepNumber} of ${args.totalSteps})`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-plan", {
+    title: "Ultra Feature Planning",
+    description: "Advanced multi-step feature planning with revisions and branches",
+    argsSchema: PlanSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Plan this feature comprehensively: ${args.task}${args.requirements ? `\n\nRequirements: ${args.requirements}` : ''}${args.scope ? ` (scope: ${args.scope})` : ''} (Step ${args.stepNumber} of ${args.totalSteps})`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-docs", {
+    title: "Ultra Documentation",
+    description: "Comprehensive step-by-step documentation generation",
+    argsSchema: DocsSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Generate comprehensive documentation: ${args.task}${args.files && args.files.length > 0 ? `\n\nFiles to document: ${args.files.join(', ')}` : ''}${args.format ? ` (format: ${args.format})` : ''} (Step ${args.stepNumber} of ${args.totalSteps})`
+      }
+    }]
+  }));
+
+  // Vector tool prompts
+  server.registerPrompt("index-vectors", {
+    title: "Index Code Vectors",
+    description: "Index project files for semantic search using vector embeddings",
+    argsSchema: IndexVectorsSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Index code files for semantic search: ${args.path || process.cwd()}${args.provider ? ` (using ${args.provider} embeddings)` : ''}${args.force ? ' (force re-indexing)' : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("search-vectors", {
+    title: "Search Code Vectors",
+    description: "Search indexed code files using natural language queries",
+    argsSchema: SearchVectorsSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Search code semantically: ${args.query} in ${args.path || process.cwd()}${args.provider ? ` (using ${args.provider} embeddings)` : ''}${args.limit ? ` (max ${args.limit} results)` : ''}${args.similarityThreshold ? ` (min similarity: ${args.similarityThreshold})` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("clear-vectors", {
+    title: "Clear Code Vectors",
+    description: "Clear all indexed vectors for a project",
+    argsSchema: ClearVectorsSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Clear all indexed vectors for project: ${args.path || process.cwd()}`
+      }
+    }]
+  }));
 
   return server;
 }
