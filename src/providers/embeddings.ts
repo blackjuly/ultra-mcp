@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 import { ProxyAgent } from 'undici';
 
 export interface EmbeddingConfig {
-  provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible';
+  provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'bailian';
   model?: string;
   apiKey?: string;
   baseURL?: string;
@@ -151,6 +151,21 @@ export class EmbeddingProvider {
         return googleInstance.embedding(modelName);
       }
       
+      case 'bailian': {
+        const apiKey = this.config.apiKey || config.bailian?.apiKey;
+        if (!apiKey) {
+          throw new Error('Alibaba Bailian API key not configured');
+        }
+        
+        const bailianInstance = createOpenAI({
+          apiKey,
+          baseURL: this.config.baseURL || config.bailian?.baseURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+          fetch: customFetch,
+        });
+        const modelName = this.config.model || config.vectorConfig?.embeddingModel?.bailian || 'text-embedding-v1';
+        return bailianInstance.embedding(modelName);
+      }
+      
       default:
         throw new Error(`Unsupported embedding provider: ${this.config.provider}`);
     }
@@ -162,7 +177,7 @@ export async function getDefaultEmbeddingProvider(configManager: ConfigManager):
   const vectorConfig = config.vectorConfig;
   
   // Determine provider priority
-  let provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' = 'openai';
+  let provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'bailian' = 'openai';
   
   if (vectorConfig?.defaultProvider) {
     provider = vectorConfig.defaultProvider;
@@ -172,8 +187,10 @@ export async function getDefaultEmbeddingProvider(configManager: ConfigManager):
     provider = 'openai';
   } else if (config.google?.apiKey) {
     provider = 'gemini';
+  } else if (config.bailian?.apiKey) {
+    provider = 'bailian';
   } else {
-    throw new Error('No embedding provider configured. Please configure OpenAI, Azure, or Google API keys.');
+    throw new Error('No embedding provider configured. Please configure OpenAI, Azure, Google, or Alibaba Bailian API keys.');
   }
   
   return new EmbeddingProvider({ provider }, configManager);

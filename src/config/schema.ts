@@ -5,7 +5,7 @@ const ApiKeySchema = z.string().min(1).optional();
 
 // Vector configuration schema
 export const VectorConfigSchema = z.object({
-  defaultProvider: z.enum(['openai', 'azure', 'gemini', 'openai-compatible']).default('openai'),
+  defaultProvider: z.enum(['openai', 'azure', 'gemini', 'openai-compatible', 'bailian']).default('openai'),
   chunkSize: z.number().min(500).max(4000).default(1500),
   chunkOverlap: z.number().min(0).max(500).default(200),
   batchSize: z.number().min(1).max(50).default(10),
@@ -19,6 +19,7 @@ export const VectorConfigSchema = z.object({
     azure: z.string().default('text-embedding-3-small'),
     gemini: z.string().default('text-embedding-004'),
     'openai-compatible': z.string().default('text-embedding-3-small'),
+    bailian: z.string().default('text-embedding-v1'),
   }).optional(),
 });
 
@@ -43,6 +44,11 @@ export const ConfigSchema = z.object({
   xai: z.object({
     apiKey: ApiKeySchema,
     baseURL: z.string().url().optional(),
+  }).optional(),
+  bailian: z.object({
+    apiKey: ApiKeySchema,
+    baseURL: z.string().url().optional(),
+    preferredModel: z.string().optional(),
   }).optional(),
   openaiCompatible: z.object({
     apiKey: ApiKeySchema,
@@ -77,6 +83,11 @@ export const defaultConfig: Config = {
   xai: {
     apiKey: undefined,
     baseURL: undefined,
+  },
+  bailian: {
+    apiKey: undefined,
+    baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+    preferredModel: 'qwen3-coder-plus',
   },
   openaiCompatible: {
     apiKey: undefined,

@@ -40,6 +40,11 @@ export type ConfigResponse = {
     apiKey?: string;
     baseURL?: string;
   };
+  bailian?: {
+    configured: boolean;
+    apiKey?: string;
+    baseURL?: string;
+  };
 };
 
 export type Model = {

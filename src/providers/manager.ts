@@ -4,6 +4,7 @@ import { GeminiProvider } from "./gemini";
 import { AzureOpenAIProvider } from "./azure";
 import { GrokProvider } from "./grok";
 import { OpenAICompatibleProvider } from "./openai-compatible";
+import { BailianProvider } from "./bailian";
 import { ConfigManager } from "../config/manager";
 
 export class ProviderManager {
@@ -22,6 +23,7 @@ export class ProviderManager {
     this.providers.set("azure", new AzureOpenAIProvider(this.configManager));
     this.providers.set("grok", new GrokProvider(this.configManager));
     this.providers.set("openai-compatible", new OpenAICompatibleProvider(this.configManager));
+    this.providers.set("bailian", new BailianProvider(this.configManager));
   }
 
   async getProvider(name: string): Promise<AIProvider> {
@@ -94,6 +96,10 @@ export class ProviderManager {
       if (providerName === 'ollama' || config.openaiCompatible?.apiKey) {
         configured.push("openai-compatible");
       }
+    }
+
+    if (config.bailian?.apiKey || process.env.DASHSCOPE_API_KEY) {
+      configured.push("bailian");
     }
 
     return configured;

@@ -8,17 +8,22 @@ export async function runMigrations(): Promise<void> {
   try {
     const db = await getDatabase();
     
-    // Try bundled location first (production)
-    let migrationsFolder = join(__dirname, 'drizzle');
+    // Try source location first (development)
+    let migrationsFolder = join(__dirname, '..', '..', 'drizzle');
     
-    // If not found, try source location (development/tests)
+    // If not found, try bundled location (production)
     if (!existsSync(migrationsFolder)) {
-      migrationsFolder = join(__dirname, '..', '..', 'drizzle');
+      migrationsFolder = join(__dirname, 'drizzle');
+    }
+    
+    // Try relative to process.cwd() as fallback
+    if (!existsSync(migrationsFolder)) {
+      migrationsFolder = join(process.cwd(), 'drizzle');
     }
     
     // Final fallback for edge cases
     if (!existsSync(migrationsFolder)) {
-      throw new Error(`Migrations folder not found. Searched: ${migrationsFolder}`);
+      throw new Error(`Migrations folder not found. Searched paths: ${[join(__dirname, '..', '..', 'drizzle'), join(__dirname, 'drizzle'), join(process.cwd(), 'drizzle')].join(', ')}`);
     }
     
     await migrate(db as any, { migrationsFolder });

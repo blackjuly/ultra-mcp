@@ -36,6 +36,27 @@ export const modelsRouter = router({
       );
     }
     
+    // xAI models
+    if (config.xai?.apiKey) {
+      models.push(
+        { id: 'grok-4', name: 'Grok-4', provider: 'xai', description: 'Latest xAI model with reasoning' },
+        { id: 'grok-3', name: 'Grok-3', provider: 'xai', description: 'Advanced conversational AI' },
+      );
+    }
+    
+    // Alibaba Bailian models
+    if (config.bailian?.apiKey) {
+      models.push(
+        { id: 'qwen-max', name: 'Qwen Max', provider: 'bailian', description: 'Most capable Qwen model' },
+        { id: 'qwen-plus', name: 'Qwen Plus', provider: 'bailian', description: 'Balanced performance and cost' },
+        { id: 'qwen-turbo', name: 'Qwen Turbo', provider: 'bailian', description: 'Fast and efficient' },
+        { id: 'qwen2.5-72b-instruct', name: 'Qwen2.5 72B', provider: 'bailian', description: 'Large parameter model' },
+        { id: 'qwen2.5-32b-instruct', name: 'Qwen2.5 32B', provider: 'bailian', description: 'Medium parameter model' },
+        { id: 'qwen2.5-14b-instruct', name: 'Qwen2.5 14B', provider: 'bailian', description: 'Efficient model' },
+        { id: 'qwen2.5-7b-instruct', name: 'Qwen2.5 7B', provider: 'bailian', description: 'Lightweight model' },
+      );
+    }
+    
     return models;
   }),
 
@@ -54,7 +75,7 @@ export const modelsRouter = router({
   updatePriorities: publicProcedure
     .input(
       z.object({
-        defaultProvider: z.enum(['openai', 'google', 'azure']).optional(),
+        defaultProvider: z.enum(['openai', 'google', 'azure', 'xai', 'bailian']).optional(),
         modelPriorities: z.array(
           z.object({
             model: z.string(),

@@ -11,7 +11,7 @@
     "drizzle/"
   ],
   "scripts": {
-    "build": "tsup && chmod +x dist/cli.js && cp -r drizzle dist/",
+    "build": "tsup && node -e \"require('fs').chmodSync('dist/cli.js', '755')\" && node -e \"require('fs-extra').copySync('drizzle', 'dist/drizzle')\"",
     "build:dashboard": "cd web && bun install && bun run build",
     "build:all": "bun run build && bun run build:dashboard",
     "dev": "tsup --watch",
@@ -88,6 +88,7 @@
     "drizzle-orm": "^0.44.2",
     "express": "4",
     "fast-glob": "^3.3.2",
+    "fs-extra": "^11.3.1",
     "https-proxy-agent": "^7.0.6",
     "ignore": "^5.3.0",
     "langchain": "^0.3.0",

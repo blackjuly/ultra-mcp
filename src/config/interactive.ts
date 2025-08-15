@@ -17,6 +17,7 @@ export async function runInteractiveConfig(): Promise<void> {
   console.log(chalk.gray('- Google API Key:'), currentConfig.google?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- Azure API Key:'), currentConfig.azure?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- xAI API Key:'), currentConfig.xai?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
+  console.log(chalk.gray('- Alibaba Bailian API Key:'), currentConfig.bailian?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- OpenAI-Compatible:'), currentConfig.openaiCompatible?.baseURL ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log();
 
@@ -30,6 +31,7 @@ export async function runInteractiveConfig(): Promise<void> {
         { title: 'Configure Google Gemini', value: 'google' },
         { title: 'Configure Azure OpenAI', value: 'azure' },
         { title: 'Configure xAI Grok', value: 'xai' },
+        { title: 'Configure Alibaba Bailian', value: 'bailian' },
         { title: 'Configure OpenAI-Compatible (Ollama/OpenRouter)', value: 'openai-compatible' },
         { title: 'Configure Vector Indexing', value: 'vector' },
         { title: 'View Current Configuration', value: 'view' },
@@ -50,6 +52,9 @@ export async function runInteractiveConfig(): Promise<void> {
     await runInteractiveConfig(); // Return to main menu
   } else if (response.action === 'xai') {
     await configureXai(configManager);
+    await runInteractiveConfig(); // Return to main menu
+  } else if (response.action === 'bailian') {
+    await configureBailian(configManager);
     await runInteractiveConfig(); // Return to main menu
   } else if (response.action === 'openai-compatible') {
     await configureOpenAICompatible(configManager);
@@ -359,9 +364,11 @@ async function configureVectorIndexing(configManager: ConfigManager): Promise<vo
         { title: 'OpenAI', value: 'openai' },
         { title: 'Azure', value: 'azure' },
         { title: 'Google Gemini', value: 'gemini' },
+        { title: 'Alibaba Bailian', value: 'bailian' },
       ],
       initial: vectorConfig.defaultProvider === 'azure' ? 1 : 
-               vectorConfig.defaultProvider === 'gemini' ? 2 : 0,
+               vectorConfig.defaultProvider === 'gemini' ? 2 :
+               vectorConfig.defaultProvider === 'bailian' ? 3 : 0,
     },
     {
       type: 'number',
@@ -726,7 +733,46 @@ async function configureXai(configManager: ConfigManager): Promise<void> {
     console.log(chalk.green('xAI Base URL updated'));
   }
   
-  console.log(chalk.green('\\n✅ xAI Grok configuration saved!'));
+  console.log(chalk.green('\n✅ xAI Grok configuration saved!'));
+}
+
+async function configureBailian(configManager: ConfigManager): Promise<void> {
+  const currentConfig = await configManager.getConfig();
+  
+  console.log(chalk.blue('\n🌟 Configure Alibaba Bailian'));
+  console.log(chalk.gray('Press Enter to keep the current value, or enter a new value.\n'));
+
+  const response = await prompts([
+    {
+      type: 'text',
+      name: 'apiKey',
+      message: 'Alibaba Bailian API Key:',
+      initial: currentConfig.bailian?.apiKey ? '(current value hidden)' : '',
+    },
+    {
+      type: 'text',
+      name: 'baseURL',
+      message: 'Bailian Base URL (optional, leave empty for default):',
+      initial: currentConfig.bailian?.baseURL || '',
+    },
+  ]);
+
+  if (response.apiKey && response.apiKey !== '(current value hidden)') {
+    if (response.apiKey.toLowerCase() === 'clear') {
+      await configManager.setApiKey('bailian', undefined);
+      console.log(chalk.yellow('Alibaba Bailian API Key cleared'));
+    } else {
+      await configManager.setApiKey('bailian', response.apiKey);
+      console.log(chalk.green('Alibaba Bailian API Key updated'));
+    }
+  }
+
+  if (response.baseURL !== undefined && response.baseURL !== currentConfig.bailian?.baseURL) {
+    await configManager.setBaseURL('bailian', response.baseURL || undefined);
+    console.log(chalk.green('Alibaba Bailian Base URL updated'));
+  }
+  
+  console.log(chalk.green('\n✅ Alibaba Bailian configuration saved!'));
 }
 
 function maskApiKey(apiKey: string): string {

@@ -39,6 +39,13 @@ function Configuration() {
       apiKey: config?.xai?.apiKey,
       baseURL: config?.xai?.baseURL,
     },
+    {
+      name: 'Alibaba Bailian',
+      key: 'bailian' as const,
+      configured: config?.bailian?.configured,
+      apiKey: config?.bailian?.apiKey,
+      baseURL: config?.bailian?.baseURL,
+    },
   ];
 
   return (

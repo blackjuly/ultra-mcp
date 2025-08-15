@@ -34,11 +34,17 @@ startCommand:
       xaiBaseUrl:
         type: string
         description: Optional base URL for xAI API
+      bailianApiKey:
+        type: string
+        description: The API key for Alibaba Bailian
+      bailianBaseUrl:
+        type: string
+        description: Optional base URL for Alibaba Bailian API
       
       # Vector configuration
       vectorProvider:
         type: string
-        enum: ["openai", "azure", "gemini", "grok"]
+        enum: ["openai", "azure", "gemini", "grok", "bailian"]
         default: "openai"
         description: Default provider for vector embeddings
       vectorChunkSize:
@@ -78,6 +84,8 @@ startCommand:
       if (config.azureResourceName) env.AZURE_RESOURCE_NAME = config.azureResourceName;
       if (config.xaiApiKey) env.XAI_API_KEY = config.xaiApiKey;
       if (config.xaiBaseUrl) env.XAI_BASE_URL = config.xaiBaseUrl;
+      if (config.bailianApiKey) env.BAILIAN_API_KEY = config.bailianApiKey;
+      if (config.bailianBaseUrl) env.BAILIAN_BASE_URL = config.bailianBaseUrl;
       
       // Map vector configuration
       if (config.vectorProvider) env.ULTRA_MCP_VECTOR_PROVIDER = config.vectorProvider;
