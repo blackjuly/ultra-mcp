@@ -37,6 +37,10 @@ export interface SessionSummary {
   status: 'active' | 'archived' | 'deleted';
 }
 
+// Constants for token allocation
+const MESSAGE_TOKEN_RATIO = 0.7;
+const FILE_TOKEN_RATIO = 0.3;
+
 export class ConversationMemoryManager {
   private async getDb() {
     return await getDatabase();
@@ -78,7 +82,7 @@ export class ConversationMemoryManager {
   }
 
   /**
-   * Add a message to the conversation
+   * Add a message to the conversation with transaction for atomicity
    */
   async addMessage(
     sessionId: string,
@@ -91,39 +95,44 @@ export class ConversationMemoryManager {
     try {
       const db = await this.getDb();
       
-      // Get next message index
-      const lastMessage = await db
-        .select({ messageIndex: conversationMessages.messageIndex })
-        .from(conversationMessages)
-        .where(eq(conversationMessages.sessionId, sessionId))
-        .orderBy(desc(conversationMessages.messageIndex))
-        .limit(1);
+      // Use transaction to prevent race conditions
+      const result = await db.transaction(async (tx) => {
+        // Get next message index within transaction
+        const lastMessage = await tx
+          .select({ messageIndex: conversationMessages.messageIndex })
+          .from(conversationMessages)
+          .where(eq(conversationMessages.sessionId, sessionId))
+          .orderBy(desc(conversationMessages.messageIndex))
+          .limit(1);
 
-      const messageIndex = (lastMessage[0]?.messageIndex ?? -1) + 1;
+        const messageIndex = (lastMessage[0]?.messageIndex ?? -1) + 1;
 
-      const [message] = await db
-        .insert(conversationMessages)
-        .values({
-          sessionId,
-          messageIndex,
-          role,
-          content,
-          toolName,
-          parentMessageId,
-          metadata
-        })
-        .returning();
+        const [message] = await tx
+          .insert(conversationMessages)
+          .values({
+            sessionId,
+            messageIndex,
+            role,
+            content,
+            toolName,
+            parentMessageId,
+            metadata
+          })
+          .returning();
 
-      // Update session last message time
-      await db
-        .update(sessions)
-        .set({ 
-          lastMessageAt: new Date(),
-          updatedAt: new Date()
-        })
-        .where(eq(sessions.id, sessionId));
+        // Update session last message time
+        await tx
+          .update(sessions)
+          .set({ 
+            lastMessageAt: new Date(),
+            updatedAt: new Date()
+          })
+          .where(eq(sessions.id, sessionId));
 
-      return message;
+        return message;
+      });
+
+      return result;
     } catch (error) {
       logger.error('Failed to add message to conversation:', error);
       throw new Error(`Failed to add message: ${error instanceof Error ? error.message : String(error)}`);
@@ -131,7 +140,7 @@ export class ConversationMemoryManager {
   }
 
   /**
-   * Add files to conversation context with deduplication and encryption
+   * Add files to conversation context with batch operations to avoid N+1 queries
    */
   async addFiles(
     sessionId: string,
@@ -139,48 +148,74 @@ export class ConversationMemoryManager {
   ): Promise<void> {
     try {
       const db = await this.getDb();
-      const filesToInsert: ConversationFile[] = [];
+      
+      // Use transaction for atomic operations
+      await db.transaction(async (tx) => {
+        // Calculate all content hashes first
+        const fileData = files.map(file => ({
+          filePath: file.filePath,
+          content: file.content,
+          contentHash: createHash('sha256').update(file.content).digest('hex')
+        }));
 
-      for (const file of files) {
-        const contentHash = createHash('sha256')
-          .update(file.content)
-          .digest('hex');
+        // Batch query for existing files
+        const contentHashes = fileData.map(f => f.contentHash);
+        const existingFiles = contentHashes.length > 0 
+          ? await tx
+              .select()
+              .from(conversationFiles)
+              .where(
+                and(
+                  eq(conversationFiles.sessionId, sessionId),
+                  inArray(conversationFiles.contentHash, contentHashes)
+                )
+              )
+          : [];
 
-        // Check if file with same hash already exists
-        const existing = await db
-          .select()
-          .from(conversationFiles)
-          .where(
-            and(
-              eq(conversationFiles.sessionId, sessionId),
-              eq(conversationFiles.contentHash, contentHash)
-            )
-          )
-          .limit(1);
+        // Create lookup map for existing files
+        const existingHashMap = new Map(
+          existingFiles.map(f => [f.contentHash, f])
+        );
 
-        if (existing.length === 0) {
-          filesToInsert.push({
-            sessionId,
-            filePath: file.filePath,
-            fileContent: file.content,
-            contentHash,
-            isRelevant: true
-          });
-        } else {
-          // Update access count and time for existing file
-          await db
+        // Prepare batch operations
+        const filesToInsert: ConversationFile[] = [];
+        const filesToUpdate: Array<{ id: string; accessCount: number }> = [];
+
+        for (const file of fileData) {
+          const existing = existingHashMap.get(file.contentHash);
+          
+          if (!existing) {
+            filesToInsert.push({
+              sessionId,
+              filePath: file.filePath,
+              fileContent: file.content,
+              contentHash: file.contentHash,
+              isRelevant: true
+            });
+          } else {
+            filesToUpdate.push({
+              id: existing.id,
+              accessCount: existing.accessCount + 1
+            });
+          }
+        }
+
+        // Batch insert new files
+        if (filesToInsert.length > 0) {
+          await tx.insert(conversationFiles).values(filesToInsert);
+        }
+
+        // Batch update existing files
+        for (const update of filesToUpdate) {
+          await tx
             .update(conversationFiles)
             .set({
               lastAccessedAt: new Date(),
-              accessCount: existing[0].accessCount + 1
+              accessCount: update.accessCount
             })
-            .where(eq(conversationFiles.id, existing[0].id));
+            .where(eq(conversationFiles.id, update.id));
         }
-      }
-
-      if (filesToInsert.length > 0) {
-        await db.insert(conversationFiles).values(filesToInsert);
-      }
+      });
     } catch (error) {
       logger.error('Failed to add files to conversation:', error);
       throw new Error(`Failed to add files: ${error instanceof Error ? error.message : String(error)}`);
@@ -250,8 +285,8 @@ export class ConversationMemoryManager {
       // Prune context if it exceeds limits
       if (maxTokens && totalTokens > maxTokens) {
         // Keep recent messages and most relevant files
-        const prunedMessages = await this.pruneMessages(messages, Math.floor(maxTokens * 0.7), model);
-        const prunedFiles = await this.pruneFiles(files, Math.floor(maxTokens * 0.3), model);
+        const prunedMessages = await this.pruneMessages(messages, Math.floor(maxTokens * MESSAGE_TOKEN_RATIO), model);
+        const prunedFiles = await this.pruneFiles(files, Math.floor(maxTokens * FILE_TOKEN_RATIO), model);
         
         return {
           sessionId,
@@ -278,7 +313,7 @@ export class ConversationMemoryManager {
   }
 
   /**
-   * Set or update conversation budget
+   * Set or update conversation budget with transaction for atomicity
    */
   async setBudget(
     sessionId: string,
@@ -289,37 +324,42 @@ export class ConversationMemoryManager {
     try {
       const db = await this.getDb();
       
-      const existing = await db
-        .select()
-        .from(conversationBudgets)
-        .where(eq(conversationBudgets.sessionId, sessionId))
-        .limit(1);
+      // Use transaction to prevent race conditions
+      const result = await db.transaction(async (tx) => {
+        const existing = await tx
+          .select()
+          .from(conversationBudgets)
+          .where(eq(conversationBudgets.sessionId, sessionId))
+          .limit(1);
 
-      if (existing.length > 0) {
-        const [updated] = await db
-          .update(conversationBudgets)
-          .set({
+        if (existing.length > 0) {
+          const [updated] = await tx
+            .update(conversationBudgets)
+            .set({
+              maxTokens,
+              maxCostUsd,
+              maxDurationMs,
+              updatedAt: new Date()
+            })
+            .where(eq(conversationBudgets.id, existing[0].id))
+            .returning();
+          return updated;
+        }
+
+        const [newBudget] = await tx
+          .insert(conversationBudgets)
+          .values({
+            sessionId,
             maxTokens,
             maxCostUsd,
-            maxDurationMs,
-            updatedAt: new Date()
+            maxDurationMs
           })
-          .where(eq(conversationBudgets.id, existing[0].id))
           .returning();
-        return updated;
-      }
 
-      const [newBudget] = await db
-        .insert(conversationBudgets)
-        .values({
-          sessionId,
-          maxTokens,
-          maxCostUsd,
-          maxDurationMs
-        })
-        .returning();
+        return newBudget;
+      });
 
-      return newBudget;
+      return result;
     } catch (error) {
       logger.error('Failed to set conversation budget:', error);
       throw new Error(`Failed to set budget: ${error instanceof Error ? error.message : String(error)}`);
@@ -327,7 +367,7 @@ export class ConversationMemoryManager {
   }
 
   /**
-   * Update budget usage
+   * Update budget usage with atomic operations
    */
   async updateBudgetUsage(
     sessionId: string,
@@ -335,24 +375,32 @@ export class ConversationMemoryManager {
     costUsd: number,
     durationMs: number
   ): Promise<void> {
-    const db = await this.getDb();
-    
-    const existing = await db
-      .select()
-      .from(conversationBudgets)
-      .where(eq(conversationBudgets.sessionId, sessionId))
-      .limit(1);
+    try {
+      const db = await this.getDb();
+      
+      // Use transaction for atomic updates
+      await db.transaction(async (tx) => {
+        const existing = await tx
+          .select()
+          .from(conversationBudgets)
+          .where(eq(conversationBudgets.sessionId, sessionId))
+          .limit(1);
 
-    if (existing.length > 0) {
-      await db
-        .update(conversationBudgets)
-        .set({
-          usedTokens: existing[0].usedTokens + tokens,
-          usedCostUsd: existing[0].usedCostUsd + costUsd,
-          usedDurationMs: existing[0].usedDurationMs + durationMs,
-          updatedAt: new Date()
-        })
-        .where(eq(conversationBudgets.id, existing[0].id));
+        if (existing.length > 0) {
+          await tx
+            .update(conversationBudgets)
+            .set({
+              usedTokens: existing[0].usedTokens + tokens,
+              usedCostUsd: existing[0].usedCostUsd + costUsd,
+              usedDurationMs: existing[0].usedDurationMs + durationMs,
+              updatedAt: new Date()
+            })
+            .where(eq(conversationBudgets.id, existing[0].id));
+        }
+      });
+    } catch (error) {
+      logger.error('Failed to update budget usage:', error);
+      // Don't throw - budget tracking is not critical
     }
   }
 

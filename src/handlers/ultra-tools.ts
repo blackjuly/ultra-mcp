@@ -234,11 +234,13 @@ export async function handleContinuation(args: any, providerManager: ProviderMan
     throw new Error(`No conversation found for session ${sessionId}`);
   }
 
-  // Build conversation history for the model
-  const messages = context.messages.map(msg => ({
-    role: msg.role as 'user' | 'assistant' | 'system',
-    content: msg.content
-  }));
+  // Build conversation history for the model (excluding 'tool' role)
+  const messages = context.messages
+    .filter(msg => msg.role !== 'tool')
+    .map(msg => ({
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content: msg.content
+    }));
 
   // Add file context if available
   let fileContext = '';

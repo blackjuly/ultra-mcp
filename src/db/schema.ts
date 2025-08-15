@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const llmRequests = sqliteTable('llm_requests', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -51,6 +51,8 @@ export const conversationMessages = sqliteTable('conversation_messages', {
   sessionIdIdx: index('conversation_messages_session_id_idx').on(table.sessionId),
   timestampIdx: index('conversation_messages_timestamp_idx').on(table.timestamp),
   messageIndexIdx: index('conversation_messages_message_index_idx').on(table.sessionId, table.messageIndex),
+  // Unique constraint to prevent duplicate message indices within a session
+  sessionMessageIdx: uniqueIndex('conversation_messages_session_message_idx_unique').on(table.sessionId, table.messageIndex),
 }));
 
 export const conversationFiles = sqliteTable('conversation_files', {
@@ -67,6 +69,8 @@ export const conversationFiles = sqliteTable('conversation_files', {
   sessionIdIdx: index('conversation_files_session_id_idx').on(table.sessionId),
   contentHashIdx: index('conversation_files_content_hash_idx').on(table.contentHash),
   relevanceIdx: index('conversation_files_relevance_idx').on(table.sessionId, table.isRelevant),
+  // Unique constraint to prevent duplicate file hashes within a session
+  sessionHashIdx: uniqueIndex('conversation_files_session_hash_unique').on(table.sessionId, table.contentHash),
 }));
 
 // Governance and budget tracking
@@ -83,6 +87,8 @@ export const conversationBudgets = sqliteTable('conversation_budgets', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).$defaultFn(() => new Date()),
 }, (table) => ({
   sessionIdIdx: index('conversation_budgets_session_id_idx').on(table.sessionId),
+  // Unique constraint to ensure one budget per session
+  sessionIdUnique: uniqueIndex('conversation_budgets_session_id_unique').on(table.sessionId),
 }));
 
 export type LlmRequest = typeof llmRequests.$inferInsert;
