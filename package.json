@@ -1,6 +1,6 @@
 {
   "name": "ultra-mcp",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "main": "dist/cli.js",
   "bin": {
     "ultra": "dist/cli.js"
@@ -94,6 +94,7 @@
     "open": "^8.4.0",
     "ora": "^5.4.1",
     "prompts": "^2.4.2",
+    "tiktoken": "^1.0.22",
     "zod": "^3.25.67"
   }
 }
