@@ -114,7 +114,15 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - 查看 Ultra MCP 日志文件：`/tmp/ultra-mcp-error.log`
 
 ### 4. API 密钥问题
-确保已正确配置 API 密钥：
+确保已正确配置 API 密钥。Ultra MCP 支持以下 AI 提供商：
+- OpenAI (GPT-4, GPT-3.5等)
+- Google Gemini
+- Azure OpenAI
+- xAI Grok
+- Qwen3-Coder (阿里云通义千问)
+- DeepSeek-R1 (阿里云百炼版 deepseek)
+
+配置 API 密钥：
 ```bash
 node dist/cli.js config
 ```

@@ -10,7 +10,7 @@ import { getVectorCount, clearVectorDB } from '../vector/db';
 // Input schema for index-vectors tool
 export const IndexVectorsSchema = z.object({
   path: z.string().default(process.cwd()),
-  provider: z.enum(['openai', 'azure', 'gemini', 'bailian']).optional(),
+  provider: z.enum(['openai', 'azure', 'gemini', 'qwen3-coder', 'deepseek-r1']).optional(),
   force: z.boolean().default(false),
 });
 
@@ -18,7 +18,7 @@ export const IndexVectorsSchema = z.object({
 export const SearchVectorsSchema = z.object({
   query: z.string(),
   path: z.string().default(process.cwd()),
-  provider: z.enum(['openai', 'azure', 'gemini', 'bailian']).optional(),
+  provider: z.enum(['openai', 'azure', 'gemini', 'qwen3-coder', 'deepseek-r1']).optional(),
   limit: z.number().min(1).max(50).default(10),
   similarityThreshold: z.number().min(0).max(1).default(0.7),
   filesOnly: z.boolean().default(false),

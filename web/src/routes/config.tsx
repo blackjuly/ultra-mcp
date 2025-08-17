@@ -40,11 +40,18 @@ function Configuration() {
       baseURL: config?.xai?.baseURL,
     },
     {
-      name: 'Alibaba Bailian',
-      key: 'bailian' as const,
-      configured: config?.bailian?.configured,
-      apiKey: config?.bailian?.apiKey,
-      baseURL: config?.bailian?.baseURL,
+      name: 'Qwen3 Coder',
+      key: 'qwen3Coder' as const,
+      configured: config?.qwen3Coder?.configured,
+      apiKey: config?.qwen3Coder?.apiKey,
+      baseURL: config?.qwen3Coder?.baseURL,
+    },
+    {
+      name: 'DeepSeek R1',
+      key: 'deepseekR1' as const,
+      configured: config?.deepseekR1?.configured,
+      apiKey: config?.deepseekR1?.apiKey,
+      baseURL: config?.deepseekR1?.baseURL,
     },
   ];
 

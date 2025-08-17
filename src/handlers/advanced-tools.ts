@@ -50,7 +50,7 @@ export const CodeReviewSchema = z.object({
   files: z.array(z.string()).optional().describe('File paths to review (optional)'),
   focus: z.enum(['bugs', 'security', 'performance', 'style', 'architecture', 'all']).default('all')
     .describe('Review focus area'),
-  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'bailian']).optional()
+  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'qwen3-coder', 'deepseek-r1']).optional()
     .describe('AI provider to use'),
   model: z.string().optional().describe('Specific model to use'),
   
@@ -75,7 +75,7 @@ export const CodeAnalysisSchema = z.object({
   files: z.array(z.string()).optional().describe('File paths to analyze (optional)'),
   focus: z.enum(['architecture', 'performance', 'security', 'quality', 'scalability', 'all']).default('all')
     .describe('Analysis focus area'),
-  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'bailian']).optional()
+  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'qwen3-coder', 'deepseek-r1']).optional()
     .describe('AI provider to use'),
   model: z.string().optional().describe('Specific model to use'),
   
@@ -93,7 +93,7 @@ export const DebugSchema = z.object({
   issue: z.string().describe('The issue or error to debug'),
   files: z.array(z.string()).optional().describe('Relevant file paths (optional)'),
   symptoms: z.string().optional().describe('Error symptoms or behavior observed'),
-  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'bailian']).optional()
+  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'qwen3-coder', 'deepseek-r1']).optional()
     .describe('AI provider to use'),
   model: z.string().optional().describe('Specific model to use'),
   
@@ -113,7 +113,7 @@ export const PlanSchema = z.object({
   requirements: z.string().optional().describe('Specific requirements or constraints'),
   scope: z.enum(['minimal', 'standard', 'comprehensive']).default('standard')
     .describe('Planning scope and depth'),
-  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'bailian']).optional()
+  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'qwen3-coder', 'deepseek-r1']).optional()
     .describe('AI provider to use'),
   model: z.string().optional().describe('Specific model to use'),
   
@@ -137,7 +137,7 @@ export const DocsSchema = z.object({
   files: z.array(z.string()).optional().describe('File paths to document (optional)'),
   format: z.enum(['markdown', 'comments', 'api-docs', 'readme', 'jsdoc']).default('markdown')
     .describe('Documentation format'),
-  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'bailian']).optional()
+  provider: z.enum(['openai', 'gemini', 'azure', 'grok', 'qwen3-coder', 'deepseek-r1']).optional()
     .describe('AI provider to use'),
   model: z.string().optional().describe('Specific model to use'),
   

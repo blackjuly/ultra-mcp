@@ -34,17 +34,23 @@ startCommand:
       xaiBaseUrl:
         type: string
         description: Optional base URL for xAI API
-      bailianApiKey:
+      qwen3CoderApiKey:
         type: string
-        description: The API key for Alibaba Bailian
-      bailianBaseUrl:
+        description: The API key for Qwen3-Coder
+      qwen3CoderBaseUrl:
         type: string
-        description: Optional base URL for Alibaba Bailian API
+        description: Optional base URL for Qwen3-Coder API
+      deepseekR1ApiKey:
+        type: string
+        description: The API key for DeepSeek-R1
+      deepseekR1BaseUrl:
+        type: string
+        description: Optional base URL for DeepSeek-R1 API
       
       # Vector configuration
       vectorProvider:
         type: string
-        enum: ["openai", "azure", "gemini", "grok", "bailian"]
+        enum: ["openai", "azure", "gemini", "grok", "qwen3-coder", "deepseek-r1"]
         default: "openai"
         description: Default provider for vector embeddings
       vectorChunkSize:
@@ -84,8 +90,10 @@ startCommand:
       if (config.azureResourceName) env.AZURE_RESOURCE_NAME = config.azureResourceName;
       if (config.xaiApiKey) env.XAI_API_KEY = config.xaiApiKey;
       if (config.xaiBaseUrl) env.XAI_BASE_URL = config.xaiBaseUrl;
-      if (config.bailianApiKey) env.BAILIAN_API_KEY = config.bailianApiKey;
-      if (config.bailianBaseUrl) env.BAILIAN_BASE_URL = config.bailianBaseUrl;
+      if (config.qwen3CoderApiKey) env.QWEN3_CODER_API_KEY = config.qwen3CoderApiKey;
+      if (config.qwen3CoderBaseUrl) env.QWEN3_CODER_BASE_URL = config.qwen3CoderBaseUrl;
+      if (config.deepseekR1ApiKey) env.DEEPSEEK_R1_API_KEY = config.deepseekR1ApiKey;
+      if (config.deepseekR1BaseUrl) env.DEEPSEEK_R1_BASE_URL = config.deepseekR1BaseUrl;
       
       // Map vector configuration
       if (config.vectorProvider) env.ULTRA_MCP_VECTOR_PROVIDER = config.vectorProvider;

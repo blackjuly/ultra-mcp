@@ -17,7 +17,8 @@ export async function runInteractiveConfig(): Promise<void> {
   console.log(chalk.gray('- Google API Key:'), currentConfig.google?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- Azure API Key:'), currentConfig.azure?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- xAI API Key:'), currentConfig.xai?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
-  console.log(chalk.gray('- Alibaba Bailian API Key:'), currentConfig.bailian?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
+  console.log(chalk.gray('- Qwen3-Coder API Key:'), currentConfig.qwen3Coder?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
+  console.log(chalk.gray('- DeepSeek-R1 API Key:'), currentConfig.deepseekR1?.apiKey ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log(chalk.gray('- OpenAI-Compatible:'), currentConfig.openaiCompatible?.baseURL ? chalk.green('✓ Set') : chalk.red('✗ Not set'));
   console.log();
 
@@ -31,7 +32,8 @@ export async function runInteractiveConfig(): Promise<void> {
         { title: 'Configure Google Gemini', value: 'google' },
         { title: 'Configure Azure OpenAI', value: 'azure' },
         { title: 'Configure xAI Grok', value: 'xai' },
-        { title: 'Configure Alibaba Bailian', value: 'bailian' },
+        { title: 'Configure Qwen3-Coder', value: 'qwen3-coder' },
+        { title: 'Configure DeepSeek-R1', value: 'deepseek-r1' },
         { title: 'Configure OpenAI-Compatible (Ollama/OpenRouter)', value: 'openai-compatible' },
         { title: 'Configure Vector Indexing', value: 'vector' },
         { title: 'View Current Configuration', value: 'view' },
@@ -53,8 +55,11 @@ export async function runInteractiveConfig(): Promise<void> {
   } else if (response.action === 'xai') {
     await configureXai(configManager);
     await runInteractiveConfig(); // Return to main menu
-  } else if (response.action === 'bailian') {
-    await configureBailian(configManager);
+  } else if (response.action === 'qwen3-coder') {
+    await configureQwen3Coder(configManager);
+    await runInteractiveConfig(); // Return to main menu
+  } else if (response.action === 'deepseek-r1') {
+    await configureDeepSeekR1(configManager);
     await runInteractiveConfig(); // Return to main menu
   } else if (response.action === 'openai-compatible') {
     await configureOpenAICompatible(configManager);
@@ -364,11 +369,13 @@ async function configureVectorIndexing(configManager: ConfigManager): Promise<vo
         { title: 'OpenAI', value: 'openai' },
         { title: 'Azure', value: 'azure' },
         { title: 'Google Gemini', value: 'gemini' },
-        { title: 'Alibaba Bailian', value: 'bailian' },
+        { title: 'Qwen3-Coder', value: 'qwen3-coder' },
+        { title: 'DeepSeek-R1', value: 'deepseek-r1' },
       ],
       initial: vectorConfig.defaultProvider === 'azure' ? 1 : 
                vectorConfig.defaultProvider === 'gemini' ? 2 :
-               vectorConfig.defaultProvider === 'bailian' ? 3 : 0,
+               vectorConfig.defaultProvider === 'qwen3-coder' ? 3 :
+               vectorConfig.defaultProvider === 'deepseek-r1' ? 4 : 0,
     },
     {
       type: 'number',
@@ -736,43 +743,82 @@ async function configureXai(configManager: ConfigManager): Promise<void> {
   console.log(chalk.green('\n✅ xAI Grok configuration saved!'));
 }
 
-async function configureBailian(configManager: ConfigManager): Promise<void> {
+async function configureQwen3Coder(configManager: ConfigManager): Promise<void> {
   const currentConfig = await configManager.getConfig();
   
-  console.log(chalk.blue('\n🌟 Configure Alibaba Bailian'));
+  console.log(chalk.blue('\n🌟 Configure Qwen3-Coder'));
   console.log(chalk.gray('Press Enter to keep the current value, or enter a new value.\n'));
 
   const response = await prompts([
     {
       type: 'text',
       name: 'apiKey',
-      message: 'Alibaba Bailian API Key:',
-      initial: currentConfig.bailian?.apiKey ? '(current value hidden)' : '',
+      message: 'Qwen3-Coder API Key:',
+      initial: currentConfig.qwen3Coder?.apiKey ? '(current value hidden)' : '',
     },
     {
       type: 'text',
       name: 'baseURL',
-      message: 'Bailian Base URL (optional, leave empty for default):',
-      initial: currentConfig.bailian?.baseURL || '',
+      message: 'Qwen3-Coder Base URL (optional, leave empty for default):',
+      initial: currentConfig.qwen3Coder?.baseURL || '',
     },
   ]);
 
   if (response.apiKey && response.apiKey !== '(current value hidden)') {
     if (response.apiKey.toLowerCase() === 'clear') {
-      await configManager.setApiKey('bailian', undefined);
-      console.log(chalk.yellow('Alibaba Bailian API Key cleared'));
+      await configManager.setApiKey('qwen3-coder', undefined);
+      console.log(chalk.yellow('Qwen3-Coder API Key cleared'));
     } else {
-      await configManager.setApiKey('bailian', response.apiKey);
-      console.log(chalk.green('Alibaba Bailian API Key updated'));
+      await configManager.setApiKey('qwen3-coder', response.apiKey);
+      console.log(chalk.green('Qwen3-Coder API Key updated'));
     }
   }
 
-  if (response.baseURL !== undefined && response.baseURL !== currentConfig.bailian?.baseURL) {
-    await configManager.setBaseURL('bailian', response.baseURL || undefined);
-    console.log(chalk.green('Alibaba Bailian Base URL updated'));
+  if (response.baseURL !== undefined && response.baseURL !== currentConfig.qwen3Coder?.baseURL) {
+    await configManager.setBaseURL('qwen3-coder', response.baseURL || undefined);
+    console.log(chalk.green('Qwen3-Coder Base URL updated'));
   }
   
-  console.log(chalk.green('\n✅ Alibaba Bailian configuration saved!'));
+  console.log(chalk.green('\n✅ Qwen3-Coder configuration saved!'));
+}
+
+async function configureDeepSeekR1(configManager: ConfigManager): Promise<void> {
+  const currentConfig = await configManager.getConfig();
+  
+  console.log(chalk.blue('\n🌟 Configure DeepSeek-R1'));
+  console.log(chalk.gray('Press Enter to keep the current value, or enter a new value.\n'));
+
+  const response = await prompts([
+    {
+      type: 'text',
+      name: 'apiKey',
+      message: 'DeepSeek-R1 API Key:',
+      initial: currentConfig.deepseekR1?.apiKey ? '(current value hidden)' : '',
+    },
+    {
+      type: 'text',
+      name: 'baseURL',
+      message: 'DeepSeek-R1 Base URL (optional, leave empty for default):',
+      initial: currentConfig.deepseekR1?.baseURL || '',
+    },
+  ]);
+
+  if (response.apiKey && response.apiKey !== '(current value hidden)') {
+    if (response.apiKey.toLowerCase() === 'clear') {
+      await configManager.setApiKey('deepseek-r1', undefined);
+      console.log(chalk.yellow('DeepSeek-R1 API Key cleared'));
+    } else {
+      await configManager.setApiKey('deepseek-r1', response.apiKey);
+      console.log(chalk.green('DeepSeek-R1 API Key updated'));
+    }
+  }
+
+  if (response.baseURL !== undefined && response.baseURL !== currentConfig.deepseekR1?.baseURL) {
+    await configManager.setBaseURL('deepseek-r1', response.baseURL || undefined);
+    console.log(chalk.green('DeepSeek-R1 Base URL updated'));
+  }
+  
+  console.log(chalk.green('\n✅ DeepSeek-R1 configuration saved!'));
 }
 
 function maskApiKey(apiKey: string): string {

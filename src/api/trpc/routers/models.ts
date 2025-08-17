@@ -44,16 +44,20 @@ export const modelsRouter = router({
       );
     }
     
-    // Alibaba Bailian models
-    if (config.bailian?.apiKey) {
+    // Qwen3-Coder models
+    if (config.qwen3Coder?.apiKey) {
       models.push(
-        { id: 'qwen-max', name: 'Qwen Max', provider: 'bailian', description: 'Most capable Qwen model' },
-        { id: 'qwen-plus', name: 'Qwen Plus', provider: 'bailian', description: 'Balanced performance and cost' },
-        { id: 'qwen-turbo', name: 'Qwen Turbo', provider: 'bailian', description: 'Fast and efficient' },
-        { id: 'qwen2.5-72b-instruct', name: 'Qwen2.5 72B', provider: 'bailian', description: 'Large parameter model' },
-        { id: 'qwen2.5-32b-instruct', name: 'Qwen2.5 32B', provider: 'bailian', description: 'Medium parameter model' },
-        { id: 'qwen2.5-14b-instruct', name: 'Qwen2.5 14B', provider: 'bailian', description: 'Efficient model' },
-        { id: 'qwen2.5-7b-instruct', name: 'Qwen2.5 7B', provider: 'bailian', description: 'Lightweight model' },
+        { id: 'qwen3-coder-plus', name: 'Qwen3-Coder Plus', provider: 'qwen3-coder', description: 'Advanced coding model' },
+        { id: 'qwen-max', name: 'Qwen Max', provider: 'qwen3-coder', description: 'Most capable Qwen model' },
+        { id: 'qwen-plus', name: 'Qwen Plus', provider: 'qwen3-coder', description: 'Balanced performance and cost' },
+        { id: 'qwen-turbo', name: 'Qwen Turbo', provider: 'qwen3-coder', description: 'Fast and efficient' },
+      );
+    }
+    
+    // DeepSeek-R1 models
+    if (config.deepseekR1?.apiKey) {
+      models.push(
+        { id: 'deepseek-r1', name: 'DeepSeek-R1', provider: 'deepseek-r1', description: 'Advanced reasoning model' },
       );
     }
     
@@ -75,7 +79,7 @@ export const modelsRouter = router({
   updatePriorities: publicProcedure
     .input(
       z.object({
-        defaultProvider: z.enum(['openai', 'google', 'azure', 'xai', 'bailian']).optional(),
+        defaultProvider: z.enum(['openai', 'google', 'azure', 'xai', 'qwen3-coder', 'deepseek-r1']).optional(),
         modelPriorities: z.array(
           z.object({
             model: z.string(),

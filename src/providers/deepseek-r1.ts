@@ -2,8 +2,8 @@ import { AIProvider, AIRequest, AIResponse } from "./types";
 import { ConfigManager } from "../config/manager";
 import { trackLLMRequest, updateLLMCompletion } from "../db/tracking";
 
-export class BailianProvider implements AIProvider {
-  name = "bailian";
+export class DeepSeekR1Provider implements AIProvider {
+  name = "deepseek-r1";
   private configManager: ConfigManager;
   
   constructor(configManager: ConfigManager) {
@@ -12,25 +12,25 @@ export class BailianProvider implements AIProvider {
 
   private async getCredentials(): Promise<{ apiKey: string; baseURL: string }> {
     const config = await this.configManager.getConfig();
-    const apiKey = config.bailian?.apiKey || process.env.DASHSCOPE_API_KEY;
+    const apiKey = config.deepseekR1?.apiKey || process.env.DASHSCOPE_API_KEY;
     
     if (!apiKey) {
-      throw new Error("Bailian API key not configured. Run 'ultra config' or set DASHSCOPE_API_KEY environment variable.");
+      throw new Error("DeepSeek R1 API key not configured. Run 'ultra config' or set DASHSCOPE_API_KEY environment variable.");
     }
 
-    const baseURL = config.bailian?.baseURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+    const baseURL = config.deepseekR1?.baseURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 
     return { apiKey, baseURL };
   }
 
   getDefaultModel(): string {
-    return "qwen-max";
+    return "deepseek-r1";
   }
 
   private async getPreferredModel(): Promise<string> {
     try {
       const config = await this.configManager.getConfig();
-      return config.bailian?.preferredModel || this.getDefaultModel();
+      return config.deepseekR1?.preferredModel || this.getDefaultModel();
     } catch {
       return this.getDefaultModel();
     }
@@ -38,9 +38,6 @@ export class BailianProvider implements AIProvider {
 
   listModels(): string[] {
     return [
-      "qwen3-coder-plus",
-      "qwen-plus",
-      "qwen-max",
       "deepseek-r1"
     ];
   }
@@ -48,13 +45,15 @@ export class BailianProvider implements AIProvider {
   async generateText(request: AIRequest): Promise<AIResponse> {
     const { apiKey, baseURL } = await this.getCredentials();
     const model = request.model || await this.getPreferredModel();
+    
+    const requestId = crypto.randomUUID();
     const startTime = Date.now();
     
-    // Track the request
-    const requestId = await trackLLMRequest({
-      provider: 'bailian',
-      model: model,
-      toolName: request.toolName,
+    // Track request
+    await trackLLMRequest({
+      requestId,
+      provider: this.name,
+      model,
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
@@ -94,36 +93,31 @@ export class BailianProvider implements AIProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Bailian API error (${response.status}): ${errorText}`);
+        throw new Error(`DeepSeek R1 API error (${response.status}): ${errorText}`);
       }
 
-      const result = await response.json();
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content || '';
       
-      // Extract response data (OpenAI compatible format)
-      const text = result.choices?.[0]?.message?.content || '';
-      const usage = result.usage ? {
-        promptTokens: result.usage.prompt_tokens || 0,
-        completionTokens: result.usage.completion_tokens || 0,
-        totalTokens: result.usage.total_tokens || 0,
-      } : undefined;
+      const usage = {
+        promptTokens: data.usage?.prompt_tokens || 0,
+        completionTokens: data.usage?.completion_tokens || 0,
+        totalTokens: data.usage?.total_tokens || 0,
+      };
       
       // Track completion
       await updateLLMCompletion({
         requestId,
         responseData: { text },
         usage,
-        finishReason: result.choices?.[0]?.finish_reason || 'stop',
+        finishReason: data.choices?.[0]?.finish_reason || 'stop',
         endTime: Date.now(),
       });
-
+      
       return {
         text,
-        model,
         usage,
-        metadata: {
-          requestId: result.id,
-          finishReason: result.choices?.[0]?.finish_reason,
-        },
+        finishReason: data.choices?.[0]?.finish_reason || 'stop',
       };
     } catch (error) {
       // Track error
@@ -140,13 +134,15 @@ export class BailianProvider implements AIProvider {
   async *streamText(request: AIRequest): AsyncGenerator<string, void, unknown> {
     const { apiKey, baseURL } = await this.getCredentials();
     const model = request.model || await this.getPreferredModel();
+    
+    const requestId = crypto.randomUUID();
     const startTime = Date.now();
     
-    // Track the request
-    const requestId = await trackLLMRequest({
-      provider: 'bailian',
-      model: model,
-      toolName: request.toolName,
+    // Track request
+    await trackLLMRequest({
+      requestId,
+      provider: this.name,
+      model,
       requestData: {
         prompt: request.prompt,
         systemPrompt: request.systemPrompt,
@@ -186,11 +182,11 @@ export class BailianProvider implements AIProvider {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Bailian API error (${response.status}): ${errorText}`);
+        throw new Error(`DeepSeek R1 API error (${response.status}): ${errorText}`);
       }
 
       if (!response.body) {
-        throw new Error('No response body received from Bailian API');
+        throw new Error('No response body received from DeepSeek R1 API');
       }
 
       const reader = response.body.getReader();

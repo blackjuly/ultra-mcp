@@ -30,6 +30,16 @@ export const configRouter = router({
         apiKey: config.xai?.apiKey ? '***' + config.xai.apiKey.slice(-4) : undefined,
         baseURL: config.xai?.baseURL,
       },
+      qwen3Coder: {
+        configured: !!config.qwen3Coder?.apiKey,
+        apiKey: config.qwen3Coder?.apiKey ? '***' + config.qwen3Coder.apiKey.slice(-4) : undefined,
+        baseURL: config.qwen3Coder?.baseURL,
+      },
+      deepseekR1: {
+        configured: !!config.deepseekR1?.apiKey,
+        apiKey: config.deepseekR1?.apiKey ? '***' + config.deepseekR1.apiKey.slice(-4) : undefined,
+        baseURL: config.deepseekR1?.baseURL,
+      },
     };
     
     return maskedConfig;
@@ -38,7 +48,7 @@ export const configRouter = router({
   update: publicProcedure
     .input(
       z.object({
-        provider: z.enum(['openai', 'google', 'azure', 'xai']),
+        provider: z.enum(['openai', 'google', 'azure', 'xai', 'qwen3Coder', 'deepseekR1']),
         config: z.object({
           apiKey: z.string().optional(),
           baseURL: z.string().optional(),
@@ -62,7 +72,7 @@ export const configRouter = router({
   testConnection: publicProcedure
     .input(
       z.object({
-        provider: z.enum(['openai', 'google', 'azure', 'xai']),
+        provider: z.enum(['openai', 'google', 'azure', 'xai', 'qwen3Coder', 'deepseekR1']),
       })
     )
     .mutation(async ({ input }) => {
@@ -76,7 +86,7 @@ export const configRouter = router({
   reset: publicProcedure
     .input(
       z.object({
-        provider: z.enum(['openai', 'google', 'azure', 'xai']).optional(),
+        provider: z.enum(['openai', 'google', 'azure', 'xai', 'qwen3Coder', 'deepseekR1']).optional(),
       })
     )
     .mutation(async ({ input }) => {

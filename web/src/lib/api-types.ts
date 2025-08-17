@@ -40,7 +40,12 @@ export type ConfigResponse = {
     apiKey?: string;
     baseURL?: string;
   };
-  bailian?: {
+  qwen3Coder?: {
+    configured: boolean;
+    apiKey?: string;
+    baseURL?: string;
+  };
+  deepseekR1?: {
     configured: boolean;
     apiKey?: string;
     baseURL?: string;

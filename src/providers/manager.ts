@@ -4,7 +4,8 @@ import { GeminiProvider } from "./gemini";
 import { AzureOpenAIProvider } from "./azure";
 import { GrokProvider } from "./grok";
 import { OpenAICompatibleProvider } from "./openai-compatible";
-import { BailianProvider } from "./bailian";
+import { Qwen3CoderProvider } from "./qwen3-coder";
+import { DeepSeekR1Provider } from "./deepseek-r1";
 import { ConfigManager } from "../config/manager";
 
 export class ProviderManager {
@@ -23,7 +24,8 @@ export class ProviderManager {
     this.providers.set("azure", new AzureOpenAIProvider(this.configManager));
     this.providers.set("grok", new GrokProvider(this.configManager));
     this.providers.set("openai-compatible", new OpenAICompatibleProvider(this.configManager));
-    this.providers.set("bailian", new BailianProvider(this.configManager));
+    this.providers.set("qwen3-coder", new Qwen3CoderProvider(this.configManager));
+    this.providers.set("deepseek-r1", new DeepSeekR1Provider(this.configManager));
   }
 
   async getProvider(name: string): Promise<AIProvider> {
@@ -98,8 +100,12 @@ export class ProviderManager {
       }
     }
 
-    if (config.bailian?.apiKey || process.env.DASHSCOPE_API_KEY) {
-      configured.push("bailian");
+    if (config.qwen3Coder?.apiKey || process.env.DASHSCOPE_API_KEY) {
+      configured.push("qwen3-coder");
+    }
+
+    if (config.deepseekR1?.apiKey || process.env.DASHSCOPE_API_KEY) {
+      configured.push("deepseek-r1");
     }
 
     return configured;

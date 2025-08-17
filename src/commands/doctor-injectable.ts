@@ -123,8 +123,40 @@ export async function runDoctorWithDeps(
       });
     }
 
-    // Check 6: At least one provider configured
-    const hasAnyProvider = !!(openaiKey || googleKey || hasAzureConfig || xaiKey);
+    // Check 6: Qwen3-Coder API Key
+    const qwen3CoderKey = config.qwen3Coder?.apiKey || env.QWEN3_CODER_API_KEY;
+    if (qwen3CoderKey) {
+      results.push({
+        name: 'Qwen3-Coder API Key',
+        status: true,
+        message: 'Configured',
+      });
+    } else {
+      results.push({
+        name: 'Qwen3-Coder API Key',
+        status: false,
+        message: 'Not configured',
+      });
+    }
+
+    // Check 7: DeepSeek-R1 API Key
+    const deepseekR1Key = config.deepseekR1?.apiKey || env.DEEPSEEK_R1_API_KEY;
+    if (deepseekR1Key) {
+      results.push({
+        name: 'DeepSeek-R1 API Key',
+        status: true,
+        message: 'Configured',
+      });
+    } else {
+      results.push({
+        name: 'DeepSeek-R1 API Key',
+        status: false,
+        message: 'Not configured',
+      });
+    }
+
+    // Check 8: At least one provider configured
+    const hasAnyProvider = !!(openaiKey || googleKey || hasAzureConfig || xaiKey || qwen3CoderKey || deepseekR1Key);
     results.push({
       name: 'Provider availability',
       status: hasAnyProvider,
@@ -216,7 +248,7 @@ export async function runDoctorWithDeps(
     }
     
     const providerResults = results.filter(r =>
-      ['OpenAI API Key', 'Google API Key', 'Azure OpenAI', 'xAI API Key'].includes(r.name)
+      ['OpenAI API Key', 'Google API Key', 'Azure OpenAI', 'xAI API Key', 'Qwen3-Coder API Key', 'DeepSeek-R1 API Key'].includes(r.name)
     );
     
     if (providerResults.every(r => !r.status)) {

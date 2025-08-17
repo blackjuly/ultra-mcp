@@ -3,7 +3,7 @@ import { ProviderManager } from "../providers/manager";
 
 // Schema for the deep-reasoning tool
 const DeepReasoningSchema = z.object({
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise OpenAI)"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise OpenAI)"),
   prompt: z.string().describe("The complex question or problem requiring deep reasoning"),
   model: z.string().optional().describe("Specific model to use (optional, will use provider default)"),
   temperature: z.number().min(0).max(2).optional().default(0.7).describe("Temperature for response generation"),
@@ -15,7 +15,7 @@ const DeepReasoningSchema = z.object({
 
 // Schema for the investigation tool
 const InvestigationSchema = z.object({
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise best available)"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise best available)"),
   topic: z.string().describe("The topic or question to investigate"),
   depth: z.enum(["shallow", "medium", "deep"]).default("deep").describe("Investigation depth"),
   model: z.string().optional().describe("Specific model to use"),
@@ -24,7 +24,7 @@ const InvestigationSchema = z.object({
 
 // Schema for the research tool
 const ResearchSchema = z.object({
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise best available)"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().describe("AI provider to use (defaults to Azure if configured, otherwise best available)"),
   query: z.string().describe("Research query or topic"),
   sources: z.array(z.string()).optional().describe("Specific sources or contexts to consider"),
   model: z.string().optional().describe("Specific model to use"),
@@ -36,35 +36,35 @@ const AnalyzeCodeSchema = z.object({
   task: z.string().describe("What to analyze (e.g., 'analyze performance of user authentication', 'review database queries')"),
   files: z.array(z.string()).optional().describe("File paths to analyze (optional)"),
   focus: z.enum(["architecture", "performance", "security", "quality", "all"]).default("all").describe("Analysis focus area"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 const ReviewCodeSchema = z.object({
   task: z.string().describe("What to review (e.g., 'review pull request changes', 'check for security issues')"),
   files: z.array(z.string()).optional().describe("File paths to review (optional)"),
   focus: z.enum(["bugs", "security", "performance", "style", "all"]).default("all").describe("Review focus area"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 const DebugIssueSchema = z.object({
   task: z.string().describe("What to debug (e.g., 'fix login error', 'investigate memory leak')"),
   files: z.array(z.string()).optional().describe("Relevant file paths (optional)"),
   symptoms: z.string().optional().describe("Error symptoms or behavior observed"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 const PlanFeatureSchema = z.object({
   task: z.string().describe("What to plan (e.g., 'add user profiles', 'implement payment system')"),
   requirements: z.string().optional().describe("Specific requirements or constraints"),
   scope: z.enum(["minimal", "standard", "comprehensive"]).default("standard").describe("Planning scope"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 const GenerateDocsSchema = z.object({
   task: z.string().describe("What to document (e.g., 'API endpoints', 'setup instructions', 'code comments')"),
   files: z.array(z.string()).optional().describe("File paths to document (optional)"),
   format: z.enum(["markdown", "comments", "api-docs", "readme"]).default("markdown").describe("Documentation format"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 // Challenge tool schema
@@ -78,7 +78,7 @@ const ConsensusSchema = z.object({
   models: z.array(z.object({
     model: z.string().describe("Model name to consult (e.g., 'gemini-pro', 'gpt-4', 'gpt-5')"),
     stance: z.enum(["for", "against", "neutral"]).default("neutral").describe("Perspective stance for this model"),
-    provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().describe("AI provider for this model")
+    provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().describe("AI provider for this model")
   })).min(1).describe("List of models to consult with their stances"),
   files: z.array(z.string()).optional().describe("Relevant file paths for context (optional)"),
 });
@@ -95,7 +95,7 @@ const PlannerSchema = z.object({
   isBranching: z.boolean().optional().default(false).describe("True if exploring an alternative approach from a previous step"),
   branchingFrom: z.number().optional().describe("If isBranching is true, which step number to branch from"),
   branchId: z.string().optional().describe("Identifier for this planning branch (e.g., 'approach-A', 'microservices-path')"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use for planning assistance"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use for planning assistance"),
 });
 
 // Precommit tool schema
@@ -107,7 +107,7 @@ const PrecommitSchema = z.object({
   includeUnstaged: z.boolean().optional().default(false).describe("Include unstaged changes in validation"),
   compareTo: z.string().optional().describe("Git ref to compare against (e.g., 'main', 'HEAD~1'). If not provided, analyzes current changes"),
   severity: z.enum(["critical", "high", "medium", "low", "all"]).default("medium").describe("Minimum severity level to report"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 // Security audit tool schema
@@ -119,7 +119,7 @@ const SecauditSchema = z.object({
   complianceRequirements: z.array(z.string()).optional().describe("Compliance frameworks to check (e.g., SOC2, PCI DSS, HIPAA, GDPR)"),
   securityScope: z.string().optional().describe("Application context (web app, mobile app, API, enterprise system)"),
   severity: z.enum(["critical", "high", "medium", "low", "all"]).default("all").describe("Minimum severity level to report"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 // Tracer tool schema
@@ -128,7 +128,7 @@ const TracerSchema = z.object({
   traceMode: z.enum(["precision", "dependencies", "ask"]).default("ask").describe("Type of tracing: 'ask' (prompts user to choose), 'precision' (execution flow), 'dependencies' (structural relationships)"),
   targetDescription: z.string().optional().describe("Detailed description of what to trace - method, function, class, or module name and context"),
   files: z.array(z.string()).optional().describe("Relevant files to focus tracing on (optional)"),
-  provider: z.enum(["openai", "gemini", "azure", "grok", "bailian"]).optional().default("gemini").describe("AI provider to use"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"]).optional().default("gemini").describe("AI provider to use"),
 });
 
 export class AIToolHandlers {
@@ -1372,7 +1372,7 @@ Explain these options clearly and wait for the user to specify which mode to use
           properties: {
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               description: "AI provider to use (defaults to Azure if configured, otherwise best available)",
             },
             prompt: {
@@ -1515,7 +1515,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },
@@ -1546,7 +1546,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },
@@ -1575,7 +1575,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },
@@ -1605,7 +1605,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },
@@ -1636,7 +1636,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },
@@ -1685,7 +1685,7 @@ Explain these options clearly and wait for the user to specify which mode to use
                   },
                   provider: {
                     type: "string",
-                    enum: ["openai", "gemini", "azure", "grok"],
+                    enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
                     description: "AI provider for this model (optional)",
                   },
                 },
@@ -1757,7 +1757,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use for planning assistance",
             },
@@ -1808,7 +1808,7 @@ Explain these options clearly and wait for the user to specify which mode to use
             },
             provider: {
               type: "string",
-              enum: ["openai", "gemini", "azure", "grok"],
+              enum: ["openai", "gemini", "azure", "grok", "qwen3-coder", "deepseek-r1"],
               default: "gemini",
               description: "AI provider to use",
             },

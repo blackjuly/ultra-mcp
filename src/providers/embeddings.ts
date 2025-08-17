@@ -7,7 +7,7 @@ import { logger } from '../utils/logger';
 import { ProxyAgent } from 'undici';
 
 export interface EmbeddingConfig {
-  provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'bailian';
+  provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'qwen3-coder' | 'deepseek-r1';
   model?: string;
   apiKey?: string;
   baseURL?: string;
@@ -151,19 +151,34 @@ export class EmbeddingProvider {
         return googleInstance.embedding(modelName);
       }
       
-      case 'bailian': {
-        const apiKey = this.config.apiKey || config.bailian?.apiKey;
+      case 'qwen3-coder': {
+        const apiKey = this.config.apiKey || config.qwen3Coder?.apiKey;
         if (!apiKey) {
-          throw new Error('Alibaba Bailian API key not configured');
+          throw new Error('Qwen3-Coder API key not configured');
         }
         
-        const bailianInstance = createOpenAI({
+        const qwen3CoderInstance = createOpenAI({
           apiKey,
-          baseURL: this.config.baseURL || config.bailian?.baseURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+          baseURL: this.config.baseURL || config.qwen3Coder?.baseURL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
           fetch: customFetch,
         });
-        const modelName = this.config.model || config.vectorConfig?.embeddingModel?.bailian || 'text-embedding-v1';
-        return bailianInstance.embedding(modelName);
+        const modelName = this.config.model || config.vectorConfig?.embeddingModel?.['qwen3-coder'] || 'text-embedding-v1';
+        return qwen3CoderInstance.embedding(modelName);
+      }
+      
+      case 'deepseek-r1': {
+        const apiKey = this.config.apiKey || config.deepseekR1?.apiKey;
+        if (!apiKey) {
+          throw new Error('DeepSeek-R1 API key not configured');
+        }
+        
+        const deepseekR1Instance = createOpenAI({
+          apiKey,
+          baseURL: this.config.baseURL || config.deepseekR1?.baseURL || 'https://api.deepseek.com/v1',
+          fetch: customFetch,
+        });
+        const modelName = this.config.model || config.vectorConfig?.embeddingModel?.['deepseek-r1'] || 'text-embedding-v1';
+        return deepseekR1Instance.embedding(modelName);
       }
       
       default:
@@ -177,7 +192,7 @@ export async function getDefaultEmbeddingProvider(configManager: ConfigManager):
   const vectorConfig = config.vectorConfig;
   
   // Determine provider priority
-  let provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'bailian' = 'openai';
+  let provider: 'openai' | 'azure' | 'gemini' | 'openai-compatible' | 'qwen3-coder' | 'deepseek-r1' = 'openai';
   
   if (vectorConfig?.defaultProvider) {
     provider = vectorConfig.defaultProvider;
@@ -187,10 +202,12 @@ export async function getDefaultEmbeddingProvider(configManager: ConfigManager):
     provider = 'openai';
   } else if (config.google?.apiKey) {
     provider = 'gemini';
-  } else if (config.bailian?.apiKey) {
-    provider = 'bailian';
+  } else if (config.qwen3Coder?.apiKey) {
+    provider = 'qwen3-coder';
+  } else if (config.deepseekR1?.apiKey) {
+    provider = 'deepseek-r1';
   } else {
-    throw new Error('No embedding provider configured. Please configure OpenAI, Azure, Google, or Alibaba Bailian API keys.');
+    throw new Error('No embedding provider configured. Please configure OpenAI, Azure, Google, Qwen3-Coder, or DeepSeek-R1 API keys.');
   }
   
   return new EmbeddingProvider({ provider }, configManager);
