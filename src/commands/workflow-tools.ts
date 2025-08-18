@@ -3,9 +3,11 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { ProviderManager } from '../providers/manager';
 import { ConfigManager } from '../config/manager';
+import { AIToolHandlers } from '../handlers/ai-tools';
 // Removed import for non-existent stream-utils
 // import { trackUsage } from '../db/tracking'; // TODO: Implement tracking
 import { promptForModel } from './chat-injectable';
+import { getConfigManager } from '../config/manager';
 
 // Helper to format tool responses for CLI display
 function formatCliResponse(response: string): string {
@@ -268,5 +270,48 @@ export function createDocsCommand() {
       await executeWorkflow('docs', task, options);
     });
   
+  return command;
+}
+
+// Create consensus command
+export function createConsensusCommand(): Command {
+  const command = new Command('consensus')
+    .description('Get consensus from multiple AI models on a proposal')
+    .argument('<proposal>', 'The proposal to analyze')
+    .option('--models <models>', 'JSON array of model configurations')
+    .action(async (proposal, options) => {
+      try {
+        const configManager = await getConfigManager();
+        const providerManager = new ProviderManager(configManager);
+        const handler = new AIToolHandlers(providerManager);
+    
+        let models;
+        if (options.models) {
+          try {
+            models = JSON.parse(options.models);
+          } catch (e) {
+            console.error('Error parsing models JSON:', e.message);
+            return;
+          }
+        } else {
+          models = [
+            { model: 'deepseek-r1', stance: 'neutral', provider: 'deepseek-r1' },
+            { model: 'qwen3-coder', stance: 'neutral', provider: 'qwen3-coder' }
+          ];
+        }
+    
+        const result = await handler.handleConsensus({
+          proposal,
+          models
+        });
+        
+        // Output the result to console
+        console.log(result.content[0].text);
+      } catch (error) {
+        console.error('Error:', error.message);
+        process.exit(1);
+      }
+    });
+
   return command;
 }

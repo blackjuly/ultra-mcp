@@ -591,70 +591,69 @@ export class AIToolHandlers {
   }
 
   async handleConsensus(params: z.infer<typeof ConsensusSchema>) {
-    const responses: any[] = [];
-    
-    // Consult each model with their specified stance
-    for (const modelConfig of params.models) {
-      const providerName = modelConfig.provider || (await this.providerManager.getPreferredProvider(['openai', 'gemini', 'azure', 'grok']));
-      const provider = await this.providerManager.getProvider(providerName);
-      
-      // Build stance-specific system prompt
-      let stancePrompt = "";
-      switch (modelConfig.stance) {
-        case "for":
-          stancePrompt = "You are analyzing this proposal from a supportive perspective. Focus on benefits, opportunities, and positive aspects while being realistic about implementation.";
-          break;
-        case "against":
-          stancePrompt = "You are analyzing this proposal from a critical perspective. Focus on risks, challenges, drawbacks, and potential issues while being fair and constructive.";
-          break;
-        case "neutral":
-        default:
-          stancePrompt = "You are analyzing this proposal from a balanced, neutral perspective. Consider both benefits and risks, opportunities and challenges equally.";
-          break;
-      }
+    // 准备并行处理所有模型调用
+    const modelPromises = await Promise.all(
+      params.models.map(async (modelConfig) => {
+        const providerName = modelConfig.provider || (await this.providerManager.getPreferredProvider(['qwen3-coder', 'deepseek-r1', 'openai', 'gemini', 'azure', 'grok']));
+        const provider = await this.providerManager.getProvider(providerName);
+        
+        // Build stance-specific system prompt
+        let stancePrompt = "";
+        switch (modelConfig.stance) {
+          case "for":
+            stancePrompt = "You are analyzing this proposal from a supportive perspective. Focus on benefits, opportunities, and positive aspects while being realistic about implementation.";
+            break;
+          case "against":
+            stancePrompt = "You are analyzing this proposal from a critical perspective. Focus on risks, challenges, drawbacks, and potential issues while being fair and constructive.";
+            break;
+          case "neutral":
+          default:
+            stancePrompt = "You are analyzing this proposal from a balanced, neutral perspective. Consider both benefits and risks, opportunities and challenges equally.";
+            break;
+        }
 
-      const systemPrompt = `${stancePrompt}
-      
-      Provide a thorough analysis of the proposal considering:
-      - Technical feasibility and implementation complexity
-      - Benefits and value proposition
-      - Risks and potential challenges
-      - Resource requirements and timeline considerations
-      - Alternative approaches or modifications
-      
-      Be specific and actionable in your analysis.`;
+        const systemPrompt = `${stancePrompt}
+        
+        Provide a thorough analysis of the proposal considering:
+        - Technical feasibility and implementation complexity
+        - Benefits and value proposition
+        - Risks and potential challenges
+        - Resource requirements and timeline considerations
+        - Alternative approaches or modifications
+        
+        Be specific and actionable in your analysis.`;
 
-      let prompt = `Analyze this proposal: ${params.proposal}`;
-      if (params.files) {
-        prompt += `\n\nRelevant files for context: ${params.files.join(", ")}`;
-      }
+        let prompt = `Analyze this proposal: ${params.proposal}`;
+        if (params.files) {
+          prompt += `\n\nRelevant files for context: ${params.files.join(", ")}`;
+        }
 
-      try {
-        const response = await provider.generateText({
+        // 返回一个Promise，它将解析为模型响应或错误
+        return provider.generateText({
           prompt,
           model: modelConfig.model,
           systemPrompt,
           temperature: 0.3, // Lower temperature for more consistent analysis
           useSearchGrounding: providerName === "gemini",
           toolName: 'consensus',
-        });
-
-        responses.push({
+        })
+        .then(response => ({
           model: modelConfig.model,
           provider: providerName,
           stance: modelConfig.stance,
           analysis: response.text,
           usage: response.usage,
-        });
-      } catch (error) {
-        responses.push({
+        }))
+        .catch(error => ({
           model: modelConfig.model,
           provider: providerName,
           stance: modelConfig.stance,
           error: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
-    }
+        }));
+      })
+    );
+    
+    const responses = modelPromises;
 
     // Generate synthesis
     const synthesisPrompt = `Based on the following analyses from different perspectives, provide a comprehensive consensus summary:
@@ -673,7 +672,7 @@ Please synthesize these perspectives into:
 
 Be objective and highlight both the strongest arguments for and against the proposal.`;
 
-    const synthesisProvider = await this.providerManager.getProvider(await this.providerManager.getPreferredProvider(['openai', 'gemini', 'azure', 'grok']));
+    const synthesisProvider = await this.providerManager.getProvider(await this.providerManager.getPreferredProvider(['qwen3-coder', 'deepseek-r1', 'openai', 'gemini', 'azure', 'grok']));
     const synthesis = await synthesisProvider.generateText({
       prompt: synthesisPrompt,
       systemPrompt: "You are an expert facilitator synthesizing multiple expert opinions. Provide balanced, objective analysis that captures the full spectrum of perspectives.",

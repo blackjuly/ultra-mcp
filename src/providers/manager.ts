@@ -113,19 +113,19 @@ export class ProviderManager {
 
   async getPreferredProvider(preferredProviders?: string[]): Promise<string> {
     const configured = await this.getConfiguredProviders();
-    
-    // If Azure is configured, always prefer it
-    if (configured.includes("azure")) {
-      return "azure";
-    }
-    
-    // If preferred providers are specified, use the first configured one
+
+    // If preferred providers are specified, honor their order and pick the first configured one
     if (preferredProviders) {
       for (const provider of preferredProviders) {
         if (configured.includes(provider)) {
           return provider;
         }
       }
+    }
+    
+    // Otherwise, if Azure is configured, prefer it by default
+    if (configured.includes("azure")) {
+      return "azure";
     }
     
     // Otherwise, return the first configured provider

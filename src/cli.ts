@@ -16,7 +16,8 @@ import {
   createAnalyzeCommand, 
   createDebugCommand, 
   createPlanCommand, 
-  createDocsCommand 
+  createDocsCommand, 
+  createConsensusCommand
 } from './commands/workflow-tools';
 import { showQuickApiKeyGuide } from './utils/api-key-guide';
 import { readFileSync } from 'fs';
@@ -158,6 +159,7 @@ program.addCommand(createAnalyzeCommand());
 program.addCommand(createDebugCommand());
 program.addCommand(createPlanCommand());
 program.addCommand(createDocsCommand());
+program.addCommand(createConsensusCommand());
 
 // Default command (when no subcommand is provided)
 program
