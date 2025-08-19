@@ -296,7 +296,7 @@ export function createConsensusCommand(): Command {
         } else {
           models = [
             { model: 'deepseek-r1', stance: 'neutral', provider: 'deepseek-r1' },
-            { model: 'qwen3-coder', stance: 'neutral', provider: 'qwen3-coder' }
+            { model: 'qwen3-coder-plus', stance: 'neutral', provider: 'qwen3-coder' }
           ];
         }
     
