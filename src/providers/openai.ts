@@ -78,26 +78,23 @@ export class OpenAIProvider implements AIProvider {
       ...((model.startsWith("o3") || model.startsWith("o1")) && { 
         reasoningEffort: request.reasoningEffort || "medium" 
       }),
-      onFinish: async (event: any) => {
-        // Track completion using onFinish callback
-        const usage = event.totalUsage ? {
-          promptTokens: event.totalUsage.inputTokens || 0,
-          completionTokens: event.totalUsage.outputTokens || 0,
-          totalTokens: event.totalUsage.totalTokens || 0,
-        } : undefined;
-        
-        await updateLLMCompletion({
-          requestId,
-          responseData: { text: event.text },
-          usage,
-          finishReason: event.finishReason,
-          endTime: Date.now(),
-        });
-      },
     };
 
     try {
       const result = await generateText(options);
+
+      // Track completion after generation (onFinish doesn't work with generateText)
+      await updateLLMCompletion({
+        requestId,
+        responseData: { text: result.text },
+        usage: result.usage ? {
+          promptTokens: result.usage.inputTokens || 0,
+          completionTokens: result.usage.outputTokens || 0,
+          totalTokens: result.usage.totalTokens || 0,
+        } : undefined,
+        finishReason: result.finishReason || 'stop',
+        endTime: Date.now(),
+      });
 
       return {
         text: result.text,

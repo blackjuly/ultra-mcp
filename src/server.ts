@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { AdvancedToolsHandler, CodeReviewSchema, CodeAnalysisSchema, DebugSchema, PlanSchema, DocsSchema } from './handlers/advanced-tools';
+import { ultraTools, handleChallenge, handleContinuation, handleSession, handleBudget } from './handlers/ultra-tools.js';
 
 // Import Zod schemas from ai-tools
 const DeepReasoningSchema = z.object({
@@ -143,6 +144,37 @@ const ClearVectorsSchema = z.object({
   path: z.string().optional().describe("Project path to clear vectors from (defaults to current directory)"),
 });
 
+// Zen-inspired tool schemas
+const ZenChallengeSchema = z.object({
+  prompt: z.string().describe("The statement, assumption, or proposal to analyze critically"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "openai-compatible"]).optional().describe("AI provider to use for critical analysis (optional, defaults to best available)"),
+  model: z.string().optional().describe("Specific model to use (optional)"),
+  sessionId: z.string().optional().describe("Session ID for conversation context (optional)"),
+});
+
+const ZenContinuationSchema = z.object({
+  sessionId: z.string().describe("Session ID to continue from"),
+  prompt: z.string().describe("New prompt or question to continue the conversation"),
+  provider: z.enum(["openai", "gemini", "azure", "grok", "openai-compatible"]).optional().describe("AI provider to use (optional, defaults to best available)"),
+  model: z.string().optional().describe("Specific model to use (optional)"),
+  includeFiles: z.boolean().optional().describe("Whether to include file context from the session (default: true)"),
+});
+
+const ZenSessionSchema = z.object({
+  action: z.enum(["create", "list", "get", "archive", "delete"]).describe("Action to perform"),
+  sessionId: z.string().optional().describe("Session ID (required for get, archive, delete actions)"),
+  name: z.string().optional().describe("Session name (optional for create action)"),
+  status: z.enum(["active", "archived", "deleted"]).optional().describe("Session status filter for list action (default: active)"),
+});
+
+const ZenBudgetSchema = z.object({
+  action: z.enum(["set", "get", "check"]).describe("Action to perform"),
+  sessionId: z.string().describe("Session ID to manage budget for"),
+  maxTokens: z.number().optional().describe("Maximum tokens allowed for the session"),
+  maxCostUsd: z.number().optional().describe("Maximum cost in USD allowed for the session"),
+  maxDurationMs: z.number().optional().describe("Maximum duration in milliseconds allowed for the session"),
+});
+
 export function createServer() {
   const server = new McpServer(
     {
@@ -158,6 +190,7 @@ export function createServer() {
 
   // Lazy loading of handlers
   let handlers: any = null;
+  let providerManager: any = null;
   
   async function getHandlers() {
     if (!handlers) {
@@ -194,11 +227,18 @@ export function createServer() {
         process.env.XAI_BASE_URL = config.xai.baseURL;
       }
       
-      const providerManager = new ProviderManager(configManager);
+      providerManager = new ProviderManager(configManager);
       handlers = new AIToolHandlers(providerManager);
     }
     
     return handlers;
+  }
+  
+  async function getProviderManager() {
+    if (!providerManager) {
+      await getHandlers(); // This will initialize providerManager
+    }
+    return providerManager;
   }
 
   // Register deep-reasoning tool
@@ -779,6 +819,98 @@ export function createServer() {
       content: {
         type: "text",
         text: `Clear all indexed vectors for project: ${args.path || process.cwd()}`
+      }
+    }]
+  }));
+
+  // Register ultra-inspired tools
+  server.registerTool("ultra-challenge", {
+    title: "Zen Challenge",
+    description: "Challenges a statement or assumption with critical thinking to prevent reflexive agreement",
+    inputSchema: ZenChallengeSchema.shape,
+  }, async (args) => {
+    const provider = await getProviderManager();
+    return await handleChallenge(args, provider);
+  });
+
+  server.registerTool("ultra-continuation", {
+    title: "Zen Continuation",
+    description: "Continue a conversation with context from a previous session, enabling context revival across interactions",
+    inputSchema: ZenContinuationSchema.shape,
+  }, async (args) => {
+    const provider = await getProviderManager();
+    return await handleContinuation(args, provider);
+  });
+
+  server.registerTool("ultra-session", {
+    title: "Zen Session",
+    description: "Manage conversation sessions for persistent context and memory",
+    inputSchema: ZenSessionSchema.shape,
+  }, async (args) => {
+    return await handleSession(args);
+  });
+
+  server.registerTool("ultra-budget", {
+    title: "Zen Budget",
+    description: "Set and monitor conversation budgets for cost and token control",
+    inputSchema: ZenBudgetSchema.shape,
+  }, async (args) => {
+    return await handleBudget(args);
+  });
+
+  // Register ultra tool prompts
+  server.registerPrompt("ultra-challenge", {
+    title: "Zen Challenge",
+    description: "Challenge statements with critical thinking to prevent reflexive agreement",
+    argsSchema: ZenChallengeSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Challenge this statement with critical thinking: ${args.prompt}${args.sessionId ? ` (session: ${args.sessionId})` : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-continuation", {
+    title: "Zen Continuation",
+    description: "Continue conversations with session context revival",
+    argsSchema: ZenContinuationSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Continue conversation from session ${args.sessionId}: ${args.prompt}${args.includeFiles === false ? ' (without files)' : ''}${args.provider ? ` (using ${args.provider} provider)` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-session", {
+    title: "Zen Session Management",
+    description: "Manage conversation sessions for persistent memory",
+    argsSchema: ZenSessionSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Session management: ${args.action}${args.sessionId ? ` (ID: ${args.sessionId})` : ''}${args.name ? ` (name: ${args.name})` : ''}${args.status ? ` (status: ${args.status})` : ''}`
+      }
+    }]
+  }));
+
+  server.registerPrompt("ultra-budget", {
+    title: "Zen Budget Control",
+    description: "Manage conversation budgets for cost and token control",
+    argsSchema: ZenBudgetSchema.shape,
+  }, (args) => ({
+    messages: [{
+      role: "user",
+      content: {
+        type: "text",
+        text: `Budget management: ${args.action} for session ${args.sessionId}${args.maxTokens ? ` (max tokens: ${args.maxTokens})` : ''}${args.maxCostUsd ? ` (max cost: $${args.maxCostUsd})` : ''}${args.maxDurationMs ? ` (max duration: ${args.maxDurationMs}ms)` : ''}`
       }
     }]
   }));

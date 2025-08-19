@@ -107,16 +107,6 @@ export class AzureOpenAIProvider implements AIProvider {
       prompt: request.prompt,
       temperature: enforcedTemperature,
       maxOutputTokens: request.maxOutputTokens,
-      onFinish: async (result) => {
-        // Track completion using onFinish callback
-        await updateLLMCompletion({
-          requestId,
-          responseData: { text: result.text },
-          usage: result.usage,
-          finishReason: result.finishReason,
-          endTime: Date.now(),
-        });
-      },
     };
 
     // Add system prompt if provided
@@ -131,6 +121,19 @@ export class AzureOpenAIProvider implements AIProvider {
 
     try {
       const result = await generateText(options);
+
+      // Track completion after generation (onFinish doesn't work with generateText)
+      await updateLLMCompletion({
+        requestId,
+        responseData: { text: result.text },
+        usage: result.usage ? {
+          promptTokens: result.usage.inputTokens || 0,
+          completionTokens: result.usage.outputTokens || 0,
+          totalTokens: result.usage.totalTokens || 0,
+        } : undefined,
+        finishReason: result.finishReason || 'stop',
+        endTime: Date.now(),
+      });
 
       return {
         text: result.text,
