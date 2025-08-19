@@ -5,7 +5,7 @@
 [![npm version](https://badge.fury.io/js/ultra-mcp.svg)](https://badge.fury.io/js/ultra-mcp)
 [![npm downloads](https://img.shields.io/npm/dm/ultra-mcp.svg)](https://www.npmjs.com/package/ultra-mcp)
 
-🚀 **Ultra MCP** - A Model Context Protocol server that exposes OpenAI, Gemini, Azure OpenAI, and xAI Grok AI models through a single MCP interface for use with Claude Code and Cursor.
+🚀 **Ultra MCP (魔改版)** - A Model Context Protocol server that exposes OpenAI, Gemini, Azure OpenAI, xAI Grok, 阿里百炼 Qwen3-Coder, and DeepSeek R1 AI models through a single MCP interface for use with Claude Code and Cursor. This enhanced version includes Google Gemini proxy support and Alibaba Bailian platform integration.
 
 
 ![img](https://github.com/user-attachments/assets/b2ade474-7c68-458c-84e4-daa73e32ad8c)
@@ -18,6 +18,22 @@ This project is inspired by:
 
 - **[Agent2Agent (A2A)](https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/)** by Google - Thank you Google for pioneering agent-to-agent communication protocols
 - **[Zen MCP](https://github.com/BeehiveInnovations/zen-mcp-server)** - The AI orchestration server that enables Claude to collaborate with multiple AI models
+
+## 魔改版本特性 (Enhanced Features)
+
+这个魔改版本在原版Ultra MCP基础上增加了以下特性：
+
+### 🌐 Google Gemini 代理支持
+- **内置代理配置**: 支持通过HTTP/HTTPS代理访问Google Gemini API
+- **环境变量配置**: 支持 `HTTP_PROXY`, `HTTPS_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY`
+- **无缝集成**: 代理配置对用户透明，无需额外设置
+
+### 🇨🇳 中国AI模型集成
+- **阿里百炼平台**: 原生支持阿里云百炼平台的 Qwen3-Coder 模型
+- **DeepSeek R1**: 集成 DeepSeek 最新的 R1 推理模型
+- **本地化优化**: 针对中国用户的网络环境进行优化
+- **多语言支持**: 更好的中文理解和生成能力
+
 
 ## Why Ultra MCP?
 
@@ -53,7 +69,9 @@ While inspired by zen-mcp-server, Ultra MCP offers several key advantages:
 
 ## Features
 
-- 🤖 **Multi-Model Support**: Integrate OpenAI (GPT-5), Google Gemini (2.5 Pro), Azure OpenAI, and xAI Grok models
+- 🤖 **Multi-Model Support**: Integrate OpenAI (GPT-5), Google Gemini (2.5 Pro), Azure OpenAI, xAI Grok, 阿里百炼 Qwen3-Coder, and DeepSeek R1 models
+- 🌐 **Proxy Support**: Built-in Google Gemini proxy support for enhanced connectivity
+- 🇨🇳 **Chinese AI Models**: Native support for 阿里百炼平台 (Alibaba Bailian) Qwen3-Coder and DeepSeek R1
 - 🔌 **MCP Protocol**: Standard Model Context Protocol interface
 - 🎯 **Discoverable Prompts**: All 25 tools available as prompts in Claude Code (New in v0.7.0)
 - 🧠 **Deep Reasoning Tools**: Access GPT-5 for complex problem-solving
@@ -66,7 +84,26 @@ While inspired by zen-mcp-server, Ultra MCP offers several key advantages:
 
 ## Quick Start
 
-### Installation
+### Installation (魔改版本)
+
+由于这是魔改版本，未发布到npm官网，需要从源码安装：
+
+```bash
+# 1. 克隆项目到本地
+git clone https://github.com/blackjuly/ultra-mcp.git
+cd ultra-mcp
+
+# 2. 安装依赖
+npm install
+
+# 3. 构建项目
+npm run build
+
+# 4. 配置代理（如果需要）
+# 配置clash 代理
+```
+
+### 标准安装（官方版本）
 
 ```bash
 # Install globally via npm
@@ -193,7 +230,56 @@ Launch Drizzle Studio to explore the usage database interactively.
 
 ### Integration with Claude Code
 
-#### Automatic Installation (Recommended)
+#### 魔改版本配置 (本地路径)
+
+对于魔改版本，需要使用本地路径配置：
+
+```json
+{
+  "mcpServers": {
+    "ultra-mcp-local": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp\\dist/cli.js"
+      ],
+      "cwd": "C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp",
+      "env": {
+        "HTTP_PROXY": "http://127.0.0.1:7897",
+        "HTTPS_PROXY": "http://127.0.0.1:7897",
+        "GLOBAL_AGENT_HTTPS_PROXY": "http://127.0.0.1:7897"
+      }
+    }
+  }
+}
+```
+
+**配置步骤：**
+
+1. **下载项目**：
+   ```bash
+   git clone https://github.com/your-username/ultra-mcp.git
+   cd ultra-mcp
+   ```
+
+2. **安装依赖**：
+   ```bash
+   npm install
+   ```
+
+3. **构建项目**：
+   ```bash
+   npm run build
+   ```
+
+4. **配置代理**（可选）：
+   - 如果需要代理访问Google Gemini等服务，在上述配置中设置 `env` 字段
+   - 将代理地址替换为你的实际代理地址
+
+5. **更新路径**：
+   - 将配置中的路径 `C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp` 替换为你的实际项目路径
+   - 确保 `dist/cli.js` 文件存在
+
+#### 官方版本自动安装 (Recommended)
 
 ```bash
 # Install Ultra MCP for Claude Code
@@ -207,7 +293,7 @@ This command will:
 - Configure for user or project scope
 - Verify API key configuration
 
-#### Manual Installation
+#### 官方版本手动安装
 
 Add to your Claude Code settings:
 
@@ -223,6 +309,42 @@ Add to your Claude Code settings:
 ```
 
 ### Integration with Cursor
+
+#### 魔改版本配置
+
+First configure your API keys:
+
+```bash
+# 进入项目目录
+cd C:\Users\hao\Documents\GitHub\ultra-mcp # 替换成你实际的目录
+
+# 配置API密钥
+node dist/cli.js config
+```
+
+Then add to your Cursor or Trae MCP settings:
+
+目录替换成实际的目录
+```json
+{
+  "mcpServers": {
+    "ultra-mcp-local": {
+      "command": "node",
+      "args": [
+        "C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp\\dist/cli.js" 
+      ],
+      "cwd": "C:\\Users\\hao\\Documents\\GitHub\\ultra-mcp",
+      "env": {
+        "HTTP_PROXY": "http://127.0.0.1:7897",
+        "HTTPS_PROXY": "http://127.0.0.1:7897",
+        "GLOBAL_AGENT_HTTPS_PROXY": "http://127.0.0.1:7897"
+      }
+    }
+  }
+}
+```
+
+#### 官方版本配置
 
 First configure your API keys:
 
@@ -361,6 +483,9 @@ You can also set API keys and base URLs via environment variables:
 - `GOOGLE_API_KEY` / `GOOGLE_BASE_URL`
 - `AZURE_API_KEY` / `AZURE_BASE_URL` (base URL required for Azure)
 - `XAI_API_KEY` / `XAI_BASE_URL`
+- `QWEN3_CODER_API_KEY` / `QWEN3_CODER_BASE_URL` (阿里百炼平台 千问)
+- `DEEPSEEK_R1_API_KEY` / `DEEPSEEK_R1_BASE_URL` (DeepSeek R1 百炼平台)
+
 
 _Note: Configuration file takes precedence over environment variables._
 
@@ -471,6 +596,26 @@ As one of the earliest **users** of GitHub Copilot (personally invited by Nat Fr
 **Ultra MCP** represents my vision of democratizing access to the best AI models, making cutting-edge AI capabilities accessible to every developer through a unified, simple interface. I believe that by removing barriers between developers and AI models, we can accelerate innovation and create a better world for everyone.
 
 _"The future belongs to those who can seamlessly orchestrate human creativity with AI capabilities."_
+
+## 魔改版本 vs 原版对比 (Enhanced vs Original)
+
+### 魔改版本独有特性
+
+1. **中国AI模型支持** - 原生集成中国主流AI服务
+   - 阿里百炼平台 Qwen3-Coder 模型
+   - DeepSeek R1 推理模型
+   - 针对中文场景优化的提示词和响应
+
+2. **代理网络支持** - 解决网络访问问题
+   - Google Gemini API 代理支持
+   - 灵活的代理配置选项
+   - 环境变量和配置文件双重支持
+
+
+### 使用建议
+
+- **选择魔改版本**：如果你需要使用中国AI模型、需要代理访问或希望完全控制部署
+- **选择原版**：如果你只使用国际AI服务且网络访问无障碍
 
 ## Why Ultra MCP is Different from Zen MCP Server
 
